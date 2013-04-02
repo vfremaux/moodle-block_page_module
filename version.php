@@ -22,13 +22,13 @@
  * version Moodle 2
  * @copyright  1999 onwards Martin Dougiamas (http://dougiamas.com)
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @author Valery Fremaux (valery.fremaux@gmail.com)
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2013020701;        // The current plugin version (Date: YYYYMMDDXX)
-$plugin->requires  = 2011112900;        // Requires this Moodle version
+$plugin->version   = 2013031400;        // The current plugin version (Date: YYYYMMDDXX)
+$plugin->requires  = 2012120300;        // Requires this Moodle version
 $plugin->component = 'block_page_module'; // Full name of the plugin (used for diagnostics)
-$plugin->release = '2.2.0 (Build 2012120600)';
+$plugin->release = '2.4.0 (Build 2013031400)';
 $plugin->maturity = MATURITY_BETA;
-$plugin->dependancies = array('format_page' => 2013012901);

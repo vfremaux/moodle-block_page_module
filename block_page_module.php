@@ -152,6 +152,7 @@ class block_page_module extends block_base {
     	global $DB;
     	
         if (empty($this->config->cmid) or !$DB->record_exists('course_modules', array('id' => $this->config->cmid))) {
+        	if (!isset($this->config)) $this->config = new StdClass();        	
             $this->config->cmid = 0;
         }
     }
@@ -161,11 +162,11 @@ class block_page_module extends block_base {
      * contextid of the block with the linked
      * module's ID.  If no ID, then hide the 
      * the button.
-     *
+     * DEPRECATED
      * @return void
      **/
-    function _add_edit_controls($options) {
-        parent::_add_edit_controls($options);
+    function _add_edit_controls() {
+        parent::_add_edit_controls();
 
         if ($this->edit_controls !== NULL) {
             if (!empty($this->config->cmid)) {

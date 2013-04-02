@@ -8,6 +8,8 @@
  * @package block_page_module
  **/
 
+$string['page_module:addinstance'] = 'Peut ajouter une instance';
+
 $string['blockname'] = 'Module de Page';
 $string['displayerror'] = 'Une erreur est survenue à l\'affichage de ce module.';
 $string['displaymodule'] = 'Montrer le module';

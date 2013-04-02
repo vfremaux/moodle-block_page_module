@@ -7,6 +7,8 @@
  * @package block_page_module
  **/
 
+$string['page_module:addinstance'] = 'Can add an instance';
+
 $string['blockname'] = 'Page module';
 $string['pluginname'] = 'Page module';
 $string['displayerror'] = 'An error occured in displaying this module.';

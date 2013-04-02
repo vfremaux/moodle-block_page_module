@@ -31,7 +31,7 @@ function block_page_module_init($cmid) {
     if (!$page) {
         require_once($CFG->dirroot.'/course/format/page/page.class.php');
 
-        if (!$page = format_page::get_current_page()) {
+        if (!$page = course_page::get_current_page()) {
             $page = new stdClass;
             $page->id = 0;
         }
