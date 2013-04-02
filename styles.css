@@ -1,0 +1,14 @@
+
+.block_page_module{
+	margin-top:15px;
+	margin-bottom:15px;
+}
+
+/* Make everything dimmed */
+
+.block_page_module div.dimmed{
+	opacity:0.4;
+	-moz-opacity:0.4;
+	filter: alpha(opacity=40);
+	background-color:#F0F0F0 !important;
+}

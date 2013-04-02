@@ -1,4 +1,4 @@
-<?php // $Id$
+<?php // $Id: block_page_module.php,v 1.9 2012-07-10 16:01:36 vf Exp $
 /**
  * Page Module block
  *
@@ -7,10 +7,12 @@
  * unless you know what your doing.
  *
  * @author Mark Nielsen
- * @version $Id$
+ * @version $Id: block_page_module.php,v 1.9 2012-07-10 16:01:36 vf Exp $
  * @package block_page_module
  * @todo Could have external methods for caching cm, module, module instace records
  **/
+
+require_once($CFG->dirroot.'/blocks/page_module/lib.php');
 
 /**
  * Block class definition
@@ -31,8 +33,20 @@ class block_page_module extends block_base {
      * @return void
      **/
     function init() {
-        $this->title = get_string('blockname', 'block_page_module') ;
-        $this->version = 2010020200;
+        $this->title = get_string('blockname', 'block_page_module');
+    }
+
+	/**
+	*
+	*
+	*/	
+    function applicable_formats() {
+        // Default case: the block can be used in page format courses only
+        return array('all' => false, 'course-view-page' => true);
+    }    
+
+    function has_config(){
+        return true;
     }
 
     /**
@@ -51,32 +65,31 @@ class block_page_module extends block_base {
         $this->content = new stdClass;
         $this->content->text = '';
         $this->content->footer = '';
-
+        
         if (empty($this->instance) or !$this->config->cmid) {
             return $this->content;
         }
 
-        require_once($CFG->dirroot.'/blocks/page_module/lib.php');
-
         // Gets all of our variables and caches result
         $result = block_page_module_init($this->config->cmid);
-
+        
         if ($result !== false and is_array($result)) {
+        	
             // Get all of the variables out
             list($this->cm,     $this->module, $this->moduleinstance,
-                 $this->course, $this->page,   $this->baseurl) = $result;
-
+                 $this->course, $this->coursepage,   $this->baseurl) = $result;
+                 
             // Check module visibility
-            $modulevisible = $this->cm->visible && $this->has_user_access($USER->id, $this->cm);
-            if ($modulevisible or has_capability('moodle/course:viewhiddenactivities', get_context_instance(CONTEXT_COURSE, $this->course->id))) {
+            $modulevisible = $this->instance->visible && $this->cm->visible && $this->has_user_access($USER->id, $this->cm);
+            if ($modulevisible or has_capability('moodle/course:viewhiddenactivities', context_course::instance($this->course->id))) {
                 // Default: set title to instance name
                 $this->title = format_string($this->moduleinstance->name);
 
                 // Calling hook, set_instance, and passing $this by reference
                 $result = block_page_module_hook($this->module->name, 'set_instance', array(&$this));
 
-                if (!empty($this->content->text) and !$this->cm->visible) {
-                    $this->content->text = '<span class="dimmed_text">'.$this->content->text.'</span>';
+                if (!empty($this->content->text) and !$modulevisible) {
+                    $this->content->text = '<div class="dimmed">'.$this->content->text.'</div>';
                 }
             }
         }
@@ -92,7 +105,16 @@ class block_page_module extends block_base {
      * @return array
      */
     function html_attributes() {
-        return array('id' => 'pageitem'.$this->instance->id, 'class' => 'block_'. $this->name()." mod-{$this->module->name}");
+        $result = block_page_module_init($this->config->cmid);
+        
+        if ($result !== false and is_array($result)) {
+        	
+            // Get all of the variables out
+            list($this->cm,     $this->module, $this->moduleinstance,
+                 $this->course, $this->coursepage,   $this->baseurl) = $result;
+		}        
+
+        return array('id' => 'pageitem'.$this->instance->id, 'class' => 'block_'. $this->name().' mod-'.@$this->module->name);
     }
 
     /**
@@ -110,7 +132,7 @@ class block_page_module extends block_base {
      * @return boolean
      **/
     function instance_allow_config() {
-        return true;
+        return false;
     }
 
     /**
@@ -127,24 +149,10 @@ class block_page_module extends block_base {
      *
      */
     function specialization() {
-        if (empty($this->config->cmid)) {
+    	global $DB;
+    	
+        if (empty($this->config->cmid) or !$DB->record_exists('course_modules', array('id' => $this->config->cmid))) {
             $this->config->cmid = 0;
-        }
-    }
-
-    /**
-     * Remap config's course module ID
-     *
-     * @return void
-     **/
-    function after_restore($restore) {
-        if (!empty($this->config->cmid)) {
-            if ($newid = backup_getid($restore->backup_unique_code, 'course_modules', $this->config->cmid)) {
-                $this->config->cmid = $newid->new_id;
-            } else {
-                $this->config->cmid = 0;
-            }
-            $this->instance_config_commit();
         }
     }
 
@@ -161,12 +169,12 @@ class block_page_module extends block_base {
 
         if ($this->edit_controls !== NULL) {
             if (!empty($this->config->cmid)) {
-                $blockcontext  = get_context_instance(CONTEXT_BLOCK, $this->instance->id);
-                $modulecontext = get_context_instance(CONTEXT_MODULE, $this->config->cmid);
+                $blockcontext  = context_block::instance($this->instance->id);
+                $modulecontext = context_module::instance($this->config->cmid);
 
                 $this->edit_controls = str_replace("contextid=$blockcontext->id", "contextid=$modulecontext->id", $this->edit_controls);
-            } else if (empty($this->instance->pinned)) {
-                // No linked module so hide the role assign widget for non-pinned instances
+            } else {
+                // No linked module so hide the role assign widget
                 $this->edit_controls = str_replace('<div class="commands"><a',
                                                    '<div class="commands"><a style="position: absolute; display: none;"',
                                                    $this->edit_controls);
@@ -174,12 +182,35 @@ class block_page_module extends block_base {
         }
     }
 
-    // PATCH : This adds a possibility to check against individual course module mapping (individualized training)
     function has_user_access($userid, $cm){
-        $hidden = get_field('page_module_access', 'hidden', 'userid', $userid, 'pageitemid', $cm->id);
+    	global $DB;
+
+        $hidden = $DB->get_field('block_page_module_access', 'hidden', array('userid' => $userid, 'pageitemid' => $cm->id));
         return !$hidden;
     }    
-    // /PATCH    
 
+    /**
+    * the cron handles time schedule switching from individualization settings
+    * This first implementation scans for active switch times
+    */
+    function cron(){
+    	global $DB;
+    	
+        $now = time();
+        if ($revealswitches = $DB->get_records_select('block_page_module_access', ' revealtime > ? AND revealtime != 0 ', array($now))){
+            foreach($revealswitches as $sw){
+                $sw->revealtime = 0;
+                $sw->hidden = 0;
+                $DB->update_record('block_page_module_access', $sw);
+            }
+        }
+        if ($hideswitches = $DB->get_records_select('block_page_module_access', ' hidetime > ? AND hidetime != 0 ', array($now))){
+            foreach($revealswitches as $sw){
+                $sw->hidetime = 0;
+                $sw->hidden = 1;
+                $DB->update_record('block_page_module_access', $sw);
+            }
+        }
+    }    
 }
 ?>

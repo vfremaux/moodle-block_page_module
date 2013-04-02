@@ -19,33 +19,26 @@
 
 function xmldb_block_page_module_upgrade($oldversion=0) {
 
-    global $CFG, $THEME, $db;
+    global $CFG, $DB;
 
     $result = true;
+    
+    $dbman = $DB->get_manager();
 
 /// And upgrade begins here. For each one, you'll need one
 /// block of code similar to the next one. Please, delete
 /// this comment lines once this file start handling proper
 /// upgrade code.
 
-    if ($result && $oldversion < 2010020200) {
-    
-    /// Define table page_module_access to be created
-        $table = new XMLDBTable('page_module_access');
+    if ($result && $oldversion < 2013020700) {
+        // Define table block_page_module_access to be renamed to NEWNAMEGOESHERE
+        $table = new xmldb_table('page_module_access');
 
-    /// Adding fields to table page_module_access
-        $table->addFieldInfo('id', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, XMLDB_SEQUENCE, null, null, null);
-        $table->addFieldInfo('userid', XMLDB_TYPE_INTEGER, '11', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, null, null);
-        $table->addFieldInfo('pageitemid', XMLDB_TYPE_INTEGER, '11', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, null, null);
-        $table->addFieldInfo('hidden', XMLDB_TYPE_INTEGER, '1', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, null, '1');
-        $table->addFieldInfo('revealtime', XMLDB_TYPE_INTEGER, '11', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, null, '0');
-        $table->addFieldInfo('hidetime', XMLDB_TYPE_INTEGER, '11', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, null, '0');
+        // Launch rename table for block_page_module_access
+        $dbman->rename_table($table, 'block_page_module_access');
 
-    /// Adding keys to table page_module_access
-        $table->addKeyInfo('primary', XMLDB_KEY_PRIMARY, array('id'));
-
-    /// Launch create table for page_module_access
-        $result = $result && create_table($table);
+        // page_module savepoint reached
+        upgrade_block_savepoint(true, 2013020700, 'page_module');    	
     }
     
     return $result;

@@ -3,7 +3,7 @@
  * Page module block external library
  *
  * @author Mark Nielsen
- * @version $Id$
+ * @version $Id: lib.php,v 1.3 2012-07-10 16:01:24 vf Exp $
  * @package block_page_module
  **/
 
@@ -23,63 +23,69 @@ $BLOCK_PAGE_MODULE;
  * @return array
  **/
 function block_page_module_init($cmid) {
-    global $COURSE, $CFG, $PAGE, $BLOCK_PAGE_MODULE;
+    global $COURSE, $CFG, $PAGE, $BLOCK_PAGE_MODULE, $DB;
 
-    static $page = false, $baseurl = '';
+    static $page = false;
+    $baseurl = '';
 
     if (!$page) {
-        if (!empty($PAGE) and get_class($PAGE) == 'format_page') {
-            $page = $PAGE->get_formatpage();
-        } else {
-            require_once($CFG->dirroot.'/course/format/page/lib.php');
+        require_once($CFG->dirroot.'/course/format/page/page.class.php');
 
-            if (!$page = page_get_current_page()) {
-                $page = new stdClass;
-                $page->id = 0;
-            }
-        }
-        if ($COURSE->id == SITEID) {
-            $baseurl = "$CFG->wwwroot/index.php?id=$COURSE->id&amp;page=$page->id";
-        } else {
-            $baseurl = "$CFG->wwwroot/course/view.php?id=$COURSE->id&amp;page=$page->id";
-        }
-
-        if (!empty($page->id)) {
-            // Since we know what page will be printed, lets
-            // get all of our records in bulk and cache the results
-            if ($cms = get_records_sql("SELECT c.*
-                                           FROM {$CFG->prefix}course_modules c,
-                                                {$CFG->prefix}format_page p,
-                                                {$CFG->prefix}format_page_items i
-                                          WHERE i.cmid = c.id
-                                            AND p.id = i.pageid
-                                            AND p.id = $page->id")) {
-                // Save for later
-                $BLOCK_PAGE_MODULE['cms'] = $cms;
-
-                if ($modules = get_records('modules')) {
-                    // Save for later
-                    $BLOCK_PAGE_MODULE['modules'] = $modules;
-
-                    $mods = array();
-                    foreach ($cms as $cm) {
-                        $mods[$modules[$cm->module]->name][] = $cm->instance;
-                    }
-                    $instances = array();
-                    foreach ($mods as $modname => $instanceids) {
-                        if ($records = get_records_list($modname, 'id', implode(',', $instanceids))) {
-                            $instances[$modname] = $records;
-                        }
-                    }
-                    // Save for later
-                    $BLOCK_PAGE_MODULE['instances'] = $instances;
-                }
-            }
-        } else {
-            // OK, we cannot do anything cool, make sure we dont break rest of the script
-            $BLOCK_PAGE_MODULE = array('cms' => array(), 'modules' => array(), 'instances' => array());
+        if (!$page = format_page::get_current_page()) {
+            $page = new stdClass;
+            $page->id = 0;
         }
     }
+
+    if ($COURSE->id == SITEID) {
+        $baseurl = "$CFG->wwwroot/index.php?id=$COURSE->id&amp;page=$page->id";
+    } else {
+        $baseurl = "$CFG->wwwroot/course/view.php?id=$COURSE->id&amp;page=$page->id";
+    }
+
+    if (!empty($page->id)) {
+        // Since we know what page will be printed, lets
+        // get all of our records in bulk and cache the results
+        $sql = "
+        	SELECT 
+        		c.*
+			FROM 
+				{course_modules} c,
+				{format_page} p,
+				{format_page_items} i
+			WHERE 
+				i.cmid = c.id AND 
+				p.id = i.pageid AND 
+				p.id = $page->id
+		";
+
+        if ($cms = $DB->get_records_sql($sql)) {
+            // Save for later
+            $BLOCK_PAGE_MODULE['cms'] = $cms;
+
+            if ($modules = $DB->get_records('modules')) {
+                // Save for later
+                $BLOCK_PAGE_MODULE['modules'] = $modules;
+
+                $mods = array();
+                foreach ($cms as $cm) {
+                    $mods[$modules[$cm->module]->name][] = $cm->instance;
+                }
+                $instances = array();
+                foreach ($mods as $modname => $instanceids) {
+                    if ($records = $DB->get_records_list($modname, 'id', implode(',', $instanceids))) {
+                        $instances[$modname] = $records;
+                    }
+                }
+                // Save for later
+                $BLOCK_PAGE_MODULE['instances'] = $instances;
+            }
+        }
+    } else {
+        // OK, we cannot do anything cool, make sure we dont break rest of the script
+        $BLOCK_PAGE_MODULE = array('cms' => array(), 'modules' => array(), 'instances' => array());
+    }
+
     if (!$cm = block_page_module_get_cm($cmid, $page->id)) {
         return false;
     }
@@ -100,12 +106,12 @@ function block_page_module_init($cmid) {
  * @return mixed
  **/
 function block_page_module_get_cm($cmid) {
-    global $BLOCK_PAGE_MODULE;
+    global $BLOCK_PAGE_MODULE, $DB;
 
     $cms = &$BLOCK_PAGE_MODULE['cms'];
 
     if (empty($cms[$cmid])) {
-        if (!$cm = get_record('course_modules', 'id', $cmid)) {
+        if (!$cm = $DB->get_record('course_modules', array('id' => $cmid))) {
             return false;
         }
         $cms[$cm->id] = $cm;
@@ -121,12 +127,12 @@ function block_page_module_get_cm($cmid) {
  * @return mixed
  **/
 function block_page_module_get_module($moduleid) {
-    global $BLOCK_PAGE_MODULE;
+    global $BLOCK_PAGE_MODULE, $DB;
 
     $modules = &$BLOCK_PAGE_MODULE['modules'];
 
     if (empty($modules[$moduleid])) {
-        if (!$module = get_record('modules', 'id', $moduleid)) {
+        if (!$module = $DB->get_record('modules', array('id' => $moduleid))) {
             return false;
         }
         $modules[$module->id] = $module;
@@ -143,12 +149,12 @@ function block_page_module_get_module($moduleid) {
  * @return mixed
  **/
 function block_page_module_get_instance($name, $id) {
-    global $BLOCK_PAGE_MODULE;
+    global $BLOCK_PAGE_MODULE, $DB;
 
     $instances = &$BLOCK_PAGE_MODULE['instances'];
 
     if (empty($instances[$name]) or empty($instances[$name][$id])) {
-        if (!$moduleinstance = get_record($name, 'id', $id)) {
+        if (!$moduleinstance = $DB->get_record($name, array('id' => $id))) {
             return false;
         }
         $instances[$name][$id] = $moduleinstance;
