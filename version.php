@@ -32,3 +32,4 @@ $plugin->requires  = 2012120300;        // Requires this Moodle version
 $plugin->component = 'block_page_module'; // Full name of the plugin (used for diagnostics)
 $plugin->release = '2.4.0 (Build 2013031400)';
 $plugin->maturity = MATURITY_BETA;
+$plugin->dependencies = array('format_page' => 2013012901);

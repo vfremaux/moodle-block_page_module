@@ -26,6 +26,10 @@ class block_page_module extends block_base {
      * @var boolean
      **/
     var $hideheader = true;
+    
+    var $modinfo;
+
+    var $completioninfo;
 
     /**
      * Sets default title and version.
@@ -33,7 +37,12 @@ class block_page_module extends block_base {
      * @return void
      **/
     function init() {
+    	global $COURSE;
+        
+        $this->completioninfo = new completion_info($COURSE);
+
         $this->title = get_string('blockname', 'block_page_module');
+        
     }
 
 	/**
@@ -49,6 +58,33 @@ class block_page_module extends block_base {
         return true;
     }
 
+	/**
+	* overrides core one to add completion data in content structures
+	*
+	*
+	*/
+    public function get_content_for_output($output) {
+    	global $COURSE;
+
+        $result = block_page_module_init($this->config->cmid);
+        
+        if ($result !== false and is_array($result)) {        	
+            // Get all of the variables out
+            list($this->cm,     $this->module, $this->moduleinstance,
+                 $this->course, $this->coursepage,   $this->baseurl) = $result;
+        }
+
+        $modinfo = get_fast_modinfo($COURSE);
+        $this->modinfo = $modinfo->cms[$this->cm->id];
+
+    	$bc = parent::get_content_for_output($output);
+    	$bc->completion = new StdClass();
+    	$bc->completion->mod = $this->modinfo;
+    	$bc->completion->completioninfo = $this->completioninfo;
+    	
+    	return $bc;
+    }
+
     /**
      * Given a course module ID, this block
      * will display the module's pageitem hook.
@@ -56,8 +92,10 @@ class block_page_module extends block_base {
      * @return object
      **/
     function get_content() {
-        global $CFG, $USER;
+        global $CFG, $USER, $PAGE, $COURSE;
 
+        $renderer = $PAGE->get_renderer('format_page');
+        
         if ($this->content !== NULL) {
             return $this->content;
         }
@@ -86,6 +124,8 @@ class block_page_module extends block_base {
                 $this->title = format_string($this->moduleinstance->name);
 
                 // Calling hook, set_instance, and passing $this by reference
+                $displayoptions = array();
+            	// $this->content->text = $renderer->print_cm($COURSE, $this->modinfo, $displayoptions); // 2.5 ready
                 $result = block_page_module_hook($this->module->name, 'set_instance', array(&$this));
 
                 if (!empty($this->content->text) and !$modulevisible) {

@@ -86,19 +86,29 @@ class restore_page_module_block_task extends restore_block_task {
         		$pageitem->cmid = $this->get_mappingid('course_module', $pageitem->cmid);
 			}
 			$DB->update_record('format_page_items', $pageitem);
+			
+			$bi = $DB->get_record('block_instances', array('id' => $blockid));
 
 	        // Adjust the serialized configdata->cmid to the actualized course module
 	        // Get the configdata
-	        $configdata = $DB->get_field('block_instances', 'configdata', array('id' => $blockid));
+
 	        // Extract configdata
-	        $config = unserialize(base64_decode($configdata));
+	        $config = unserialize(base64_decode($bi->configdata));
 	        // Set array of used rss feeds
 	        // TODO check this, not sure course modules are stored in backup mapping tables as this
 	        $config->cmid = $this->get_mappingid('course_module', $config->cmid);
 	        // Serialize back the configdata
-	        $configdata = base64_encode(serialize($config));
-	        // Set the configdata back
-	        $DB->set_field('block_instances', 'configdata', $configdata, array('id' => $blockid));
+	        $bi->configdata = base64_encode(serialize($config));
+	        
+	        // remap the subpage
+	        $oldpageid = str_replace('page-', '', $bi->subpagepattern);
+	        $newpageid = $this->get_mappingid('format_page', $oldpageid);
+	        $bi->subpagepattern = 'page-'.$newpageid;
+	        $DB->update_record('block_instances', $bi);
+
+			if ($subpage = $DB->get_field('block_positions', 'subpage', array('blockinstanceid' => $blockid, 'contextid' => $bi->parentcontextid))){
+				$DB->set_field('block_positions', 'subpage', 'page-'.$newpageid, array('blockinstanceid' => $blockid, 'contextid' => $bi->parentcontextid));
+			}
 
 		} else {
 			$this->get_logger()->process("Failed in finding pageitem for block $oldblockid. ", backup::LOG_ERROR);    			
