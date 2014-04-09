@@ -111,7 +111,7 @@ class restore_page_module_block_task extends restore_block_task {
 			}
 
 		} else {
-			$this->get_logger()->process("Failed in finding pageitem for block $oldblockid. ", backup::LOG_ERROR);    			
+			$this->plan->log("Failed in finding pageitem for page_module block $oldblockid. ", backup::LOG_ERROR);    			
 		}		
     }
 
