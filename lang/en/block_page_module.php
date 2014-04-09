@@ -17,5 +17,3 @@ $string['pageindividualisationfeature'] = 'Individualization';
 $string['configpageindividualisationfeature'] = 'Checking this box will actviate the individualization feature of the flexipage format. The individualization feature allows activating and disabling individually course modules for each user, and can schedule ih time the apparition or hiding of activties.';
 $string['individualizewithtimes'] = 'Time scheduling of modules';
 $string['configindividualizewithtimes'] = 'Checking this box will activate the switch on and switch off instants of modules being individualized';
-
-?>

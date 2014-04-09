@@ -29,6 +29,8 @@ class block_page_module extends block_base {
     
     var $modinfo;
 
+    var $coursemodinfo;
+
     var $completioninfo;
 
     /**
@@ -42,7 +44,8 @@ class block_page_module extends block_base {
         $this->completioninfo = new completion_info($COURSE);
 
         $this->title = get_string('blockname', 'block_page_module');
-        
+
+        $this->coursemodinfo = get_fast_modinfo($COURSE);
     }
 
 	/**
@@ -74,13 +77,14 @@ class block_page_module extends block_base {
                  $this->course, $this->coursepage,   $this->baseurl) = $result;
         }
 
-        $modinfo = get_fast_modinfo($COURSE);
-        $this->modinfo = $modinfo->cms[$this->cm->id];
-
     	$bc = parent::get_content_for_output($output);
-    	$bc->completion = new StdClass();
-    	$bc->completion->mod = $this->modinfo;
-    	$bc->completion->completioninfo = $this->completioninfo;
+    	
+        if (array_key_exists($this->cm->id, $this->coursemodinfo)){
+	        $this->modinfo = $this->coursemodinfo->cms[$this->cm->id];
+	    	$bc->completion = new StdClass();
+	    	$bc->completion->mod = $this->modinfo;
+	    	$bc->completion->completioninfo = $this->completioninfo;
+	    }
     	
     	return $bc;
     }
@@ -122,11 +126,13 @@ class block_page_module extends block_base {
             if ($modulevisible or has_capability('moodle/course:viewhiddenactivities', context_course::instance($this->course->id))) {
                 // Default: set title to instance name
                 $this->title = format_string($this->moduleinstance->name);
-
+                
                 // Calling hook, set_instance, and passing $this by reference
                 $displayoptions = array();
-            	// $this->content->text = $renderer->print_cm($COURSE, $this->modinfo, $displayoptions); // 2.5 ready
-                $result = block_page_module_hook($this->module->name, 'set_instance', array(&$this));
+                block_page_module_hook($this->module->name, 'set_instance', array(&$this));
+                if (empty($this->content->text) && array_key_exists($this->config->cmid, $this->coursemodinfo->cms)){
+	            	$this->content->text = $renderer->print_cm($COURSE, $this->coursemodinfo->cms[$this->cm->id], $displayoptions);
+	            }
 
                 if (!empty($this->content->text) and !$modulevisible) {
                     $this->content->text = '<div class="dimmed">'.$this->content->text.'</div>';
@@ -254,4 +260,3 @@ class block_page_module extends block_base {
         }
     }    
 }
-?>

@@ -17,5 +17,3 @@ $string['pageindividualisationfeature'] = 'Individualisation';
 $string['configpageindividualisationfeature'] = 'Cocher cette case active les fonctions d\'individualisation du format \"page\". Ces fonctions permettent d\'activer ou de désactiver individuellement les activités pour chaque utilisateur et permet aussi d\'en planifier l\'activation dans le temps';
 $string['individualizewithtimes'] = 'Programmation dans le temps des modules';
 $string['configindividualizewithtimes'] = 'Cocher cette case active les temporisations de l\'individualisation et permet d\'activer et de désactiver les modules dans le temps';
-
-?>

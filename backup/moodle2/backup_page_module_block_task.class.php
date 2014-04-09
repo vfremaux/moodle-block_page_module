@@ -36,7 +36,7 @@ class backup_page_module_block_task extends backup_block_task {
     }
 
     protected function define_my_steps() {
-        // rss_client has one structure step
+        // page_module has one structure step
         $this->add_step(new backup_page_module_block_structure_step('page_module_structure', 'page_module.xml'));
     }
 
