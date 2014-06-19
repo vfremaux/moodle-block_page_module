@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -16,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package blocks-page_module
+ * @package moodlecore
  * @subpackage backup-moodle2
  * @copyright 2003 onwards Eloy Lafuente (stronk7) {@link http://stronk7.com}
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -34,12 +33,12 @@ class backup_page_module_block_structure_step extends backup_block_structure_ste
     protected function define_structure() {
         global $DB;
 
-        // Get the block
+        // Get the block.
         $block = $DB->get_record('block_instances', array('id' => $this->task->get_blockid()));
-        // Extract configdata
+        // Extract configdata.
         $config = unserialize(base64_decode($block->configdata));
 
-        // Define each element separated
+        // Define each element separated.
 
         $pagemodule = new backup_nested_element('pagemodule', array('id'), array('pageid', 'cmid', 'blockinstance'));
 
@@ -48,21 +47,21 @@ class backup_page_module_block_structure_step extends backup_block_structure_ste
         $access = new backup_nested_element('access', array('id'), array(
             'userid', 'pageitemid', 'hidden', 'revealtime', 'hidetime'));
 
-        // Build the tree
+        // Build the tree.
 
         $pagemodule->add_child($grants);
         $grants->add_child($access);
 
-        // Define sources
+        // Define sources.
 
-		$instances = $DB->get_records('format_page_items', array('blockinstance' => $block->id));
+        $instances = $DB->get_records('format_page_items', array('blockinstance' => $block->id));
         $pagemodule->set_source_array($instances);
         $access->set_source_table('block_page_module_access', array('pageitemid' => backup::VAR_PARENTID));
 
-        // Annotations (none)
+        // Annotations (none).
         $access->annotate_ids('user', 'userid');
 
-        // Return the root element (page_module), wrapped into standard block structure
+        // Return the root element (page_module), wrapped into standard block structure.
         return $this->prepare_block_structure($pagemodule);
     }
 }

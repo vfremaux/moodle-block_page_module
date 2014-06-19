@@ -1,5 +1,4 @@
 <?php
-
 // This file keeps track of upgrades to
 // the email
 //
@@ -25,20 +24,20 @@ function xmldb_block_page_module_upgrade($oldversion=0) {
     
     $dbman = $DB->get_manager();
 
-/// And upgrade begins here. For each one, you'll need one
-/// block of code similar to the next one. Please, delete
-/// this comment lines once this file start handling proper
-/// upgrade code.
+// And upgrade begins here. For each one, you'll need one
+// block of code similar to the next one. Please, delete
+// this comment lines once this file start handling proper
+// upgrade code.
 
     if ($result && $oldversion < 2013020700) {
-        // Define table block_page_module_access to be renamed to NEWNAMEGOESHERE
+        // Define table block_page_module_access to be renamed to block_page_module_access.
         $table = new xmldb_table('page_module_access');
 
-        // Launch rename table for block_page_module_access
+        // Launch rename table for block_page_module_access.
         $dbman->rename_table($table, 'block_page_module_access');
 
-        // page_module savepoint reached
-        upgrade_block_savepoint(true, 2013020700, 'page_module');    	
+        // page_module savepoint reached.
+        upgrade_block_savepoint(true, 2013020700, 'page_module');
     }
     
     return $result;
