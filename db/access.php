@@ -1,5 +1,4 @@
 <?php
-
 //
 // Capability definitions for the block page_module.
 //

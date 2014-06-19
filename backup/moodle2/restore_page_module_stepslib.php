@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -45,19 +44,19 @@ class restore_page_module_block_structure_step extends restore_structure_step {
     public function process_block($data) {
         global $DB;
 
-		// nothing to do yet here
+        // Nothing to do yet here.
     }
     
     /*
-    // We cannot do anything with that. 
+     * We cannot do anything with that. 
     public function process_page_module($data) {
     }
-    */
+     */
 
-	/*
-	* Here we have a precedence ipossibility : blocks may be restored before course format
-	* additions. We need a after_restore post processing.
-	*/
+    /*
+    * Here we have a precedence impossibility : blocks may be restored before course format
+    * additions. We need a after_restore post processing.
+    */
     public function process_access($data) {
         global $DB;
 
@@ -65,6 +64,7 @@ class restore_page_module_block_structure_step extends restore_structure_step {
         $oldid = $data->id;
 
         $data->course = $this->task->get_courseid();
+        $data->userid = $this->get_mappingid('user', $data->userid);
         $data->pageitemid = $this->get_mappingid('course_modules', $data->cmid);
         $data->revealtime = $this->apply_date_offset($data->revealtime);
         $data->hidetime = $this->apply_date_offset($data->hidetime);
