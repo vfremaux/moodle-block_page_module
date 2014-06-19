@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -36,16 +35,16 @@ class restore_page_module_block_task extends restore_block_task {
     }
 
     protected function define_my_steps() {
-        // block page_module has one structure step
+        // Block page_module has one structure step.
         $this->add_step(new restore_page_module_block_structure_step('page_module_structure', 'page_module.xml'));
     }
 
     public function get_fileareas() {
-        return array(); // No associated fileareas
+        return array(); // No associated fileareas.
     }
 
     public function get_configdata_encoded_attributes() {
-        return array(); // No special handling of configdata
+        return array(); // No special handling of configdata.
     }
 
     static public function define_decode_contents() {
@@ -56,63 +55,63 @@ class restore_page_module_block_task extends restore_block_task {
         return array();
     }
     
-	// each block will be responsible for his own remapping in is associated pageid    	    	
-    public function after_restore(){
-		global $DB;
-		
-    	$courseid = $this->get_courseid();
-    	$blockid = $this->get_blockid();
-    	$oldblockid = $this->get_old_blockid();
+    // Each block will be responsible for his own remapping in is associated pageid.
+    public function after_restore() {
+        global $DB;
 
-		// these are fake blocks that can be cached in backup
-		if (!$blockid) return; 
+        $courseid = $this->get_courseid();
+        $blockid = $this->get_blockid();
+        $oldblockid = $this->get_old_blockid();
 
-		// get the old block reference    	
-    	$sql = "
-    		SELECT
-    			fpi.*
-    		FROM
-    			{format_page_items} fpi,
-    			{format_page} f
-    		WHERE
-    			f.courseid = ? AND
-    			fpi.pageid = f.id AND
-    			fpi.blockinstance = ?
-    	";
+        // These are fake blocks that can be cached in backup.
+        if (!$blockid) return;
 
-		if ($pageitem = $DB->get_record_sql($sql, array($courseid, $oldblockid))){
-			$pageitem->blockinstance = $blockid;
-			if (@$pageitem->cmid){
-        		$pageitem->cmid = $this->get_mappingid('course_module', $pageitem->cmid);
-			}
-			$DB->update_record('format_page_items', $pageitem);
-			
-			$bi = $DB->get_record('block_instances', array('id' => $blockid));
+        // Get the old block reference.
+        $sql = "
+            SELECT
+                fpi.*
+            FROM
+                {format_page_items} fpi,
+                {format_page} f
+            WHERE
+                f.courseid = ? AND
+                fpi.pageid = f.id AND
+                fpi.blockinstance = ?
+        ";
 
-	        // Adjust the serialized configdata->cmid to the actualized course module
-	        // Get the configdata
+        if ($pageitem = $DB->get_record_sql($sql, array($courseid, $oldblockid))) {
+            $pageitem->blockinstance = $blockid;
+            if (@$pageitem->cmid) {
+                $pageitem->cmid = $this->get_mappingid('course_module', $pageitem->cmid);
+            }
+            $DB->update_record('format_page_items', $pageitem);
+            
+            $bi = $DB->get_record('block_instances', array('id' => $blockid));
 
-	        // Extract configdata
-	        $config = unserialize(base64_decode($bi->configdata));
-	        // Set array of used rss feeds
-	        // TODO check this, not sure course modules are stored in backup mapping tables as this
-	        $config->cmid = $this->get_mappingid('course_module', $config->cmid);
-	        // Serialize back the configdata
-	        $bi->configdata = base64_encode(serialize($config));
-	        
-	        // remap the subpage
-	        $oldpageid = str_replace('page-', '', $bi->subpagepattern);
-	        $newpageid = $this->get_mappingid('format_page', $oldpageid);
-	        $bi->subpagepattern = 'page-'.$newpageid;
-	        $DB->update_record('block_instances', $bi);
+            // Adjust the serialized configdata->cmid to the actualized course module.
+            // Get the configdata.
 
-			if ($subpage = $DB->get_field('block_positions', 'subpage', array('blockinstanceid' => $blockid, 'contextid' => $bi->parentcontextid))){
-				$DB->set_field('block_positions', 'subpage', 'page-'.$newpageid, array('blockinstanceid' => $blockid, 'contextid' => $bi->parentcontextid));
-			}
+            // Extract configdata.
+            $config = unserialize(base64_decode($bi->configdata));
+            // Set array of used rss feeds.
+            // TODO check this, not sure course modules are stored in backup mapping tables as this.
+            $config->cmid = $this->get_mappingid('course_module', $config->cmid);
+            // Serialize back the configdata.
+            $bi->configdata = base64_encode(serialize($config));
 
-		} else {
-			$this->plan->log("Failed in finding pageitem for page_module block $oldblockid. ", backup::LOG_ERROR);    			
-		}		
+            // Remap the subpage.
+            $oldpageid = str_replace('page-', '', $bi->subpagepattern);
+            $newpageid = $this->get_mappingid('format_page', $oldpageid);
+            $bi->subpagepattern = 'page-'.$newpageid;
+            $DB->update_record('block_instances', $bi);
+
+            if ($subpage = $DB->get_field('block_positions', 'subpage', array('blockinstanceid' => $blockid, 'contextid' => $bi->parentcontextid))) {
+                $DB->set_field('block_positions', 'subpage', 'page-'.$newpageid, array('blockinstanceid' => $blockid, 'contextid' => $bi->parentcontextid));
+            }
+
+        } else {
+            $this->get_logger()->process("Failed in finding pageitem for block $oldblockid. ", backup::LOG_ERROR);
+        }
     }
 
     /**
@@ -133,6 +132,5 @@ class restore_page_module_block_task extends restore_block_task {
     public function get_mapping($itemname, $oldid) {
         return restore_dbops::get_backup_ids_record($this->plan->get_restoreid(), $itemname, $oldid);
     }
-
 }
 

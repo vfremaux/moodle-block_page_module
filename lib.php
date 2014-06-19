@@ -1,4 +1,19 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
 /**
  * Page module block external library
  *
@@ -10,7 +25,7 @@
 /**
  * Our global cache variable
  */
-$BLOCK_PAGE_MODULE;
+global $BLOCK_PAGE_MODULE;
 
 /**
  * External function for retrieving module data.
@@ -36,50 +51,49 @@ function block_page_module_init($cmid) {
             $page->id = 0;
         }
 
-		// then build our cache
-	    if (!empty($page->id)) {
-	        // Since we know what page will be printed, lets
-	        // get all of our records in bulk and cache the results
-	        $sql = "
-	        	SELECT 
-	        		c.*
-				FROM 
-					{course_modules} c,
-					{format_page} p,
-					{format_page_items} i
-				WHERE 
-					i.cmid = c.id AND 
-					p.id = i.pageid AND 
-					p.id = $page->id
-			";
-	
-	        if ($cms = $DB->get_records_sql($sql)) {
-	            // Save for later
-	            $BLOCK_PAGE_MODULE['cms'] = $cms;
-	
-	            if ($modules = $DB->get_records('modules')) {
-	                // Save for later
-	                $BLOCK_PAGE_MODULE['modules'] = $modules;
-	
-	                $mods = array();
-	                foreach ($cms as $cm) {
-	                    $mods[$modules[$cm->module]->name][] = $cm->instance;
-	                }
-	                $instances = array();
-	                foreach ($mods as $modname => $instanceids) {
-	                    if ($records = $DB->get_records_list($modname, 'id', implode(',', $instanceids))) {
-	                        $instances[$modname] = $records;
-	                    }
-	                }
-	                // Save for later
-	                $BLOCK_PAGE_MODULE['instances'] = $instances;
-	            }
-	        }
-	    } else {
-	        // OK, we cannot do anything cool, make sure we dont break rest of the script
-	        $BLOCK_PAGE_MODULE = array('cms' => array(), 'modules' => array(), 'instances' => array());
-	    }
-	
+        // Then build our cache.
+        if (!empty($page->id)) {
+            // Since we know what page will be printed, lets get all of our records in bulk and cache the results.
+            $sql = "
+                SELECT 
+                    c.*
+                FROM 
+                    {course_modules} c,
+                    {format_page} p,
+                    {format_page_items} i
+                WHERE 
+                    i.cmid = c.id AND 
+                    p.id = i.pageid AND 
+                    p.id = ?
+            ";
+    
+            if ($cms = $DB->get_records_sql($sql, array($page->id))) {
+                // Save for later.
+                $BLOCK_PAGE_MODULE['cms'] = $cms;
+    
+                if ($modules = $DB->get_records('modules')) {
+                    // Save for later.
+                    $BLOCK_PAGE_MODULE['modules'] = $modules;
+    
+                    $mods = array();
+                    foreach ($cms as $cm) {
+                        $mods[$modules[$cm->module]->name][] = $cm->instance;
+                    }
+                    $instances = array();
+                    foreach ($mods as $modname => $instanceids) {
+                        if ($records = $DB->get_records_list($modname, 'id', implode(',', $instanceids))) {
+                            $instances[$modname] = $records;
+                        }
+                    }
+                    // Save for later.
+                    $BLOCK_PAGE_MODULE['instances'] = $instances;
+                }
+            }
+        } else {
+            // OK, we cannot do anything cool, make sure we dont break rest of the script.
+            $BLOCK_PAGE_MODULE = array('cms' => array(), 'modules' => array(), 'instances' => array());
+        }
+    
     }
 
     if ($COURSE->id == SITEID) {
@@ -188,7 +202,7 @@ function block_page_module_hook($module, $method, $args = array()) {
         $args = array($args);
     }
     
-    // Path and function mappings
+    // Path and function mappings.
     $paths = array("$CFG->dirroot/mod/$module/pageitem.php"
                         => "{$module}_$method",
                    "$CFG->dirroot/course/format/page/plugins/$module.php"
@@ -209,4 +223,3 @@ function block_page_module_hook($module, $method, $args = array()) {
 
     return $result;
 }
-
