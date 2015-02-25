@@ -193,7 +193,7 @@ function block_page_module_get_instance($name, $id) {
  * @param mixed $args This will be passed to the hook function
  * @return mixed
  **/
-function block_page_module_hook($module, $method, $args = array()) {
+function block_page_module_hook($moduleview, $method, $args = array()) {
     global $CFG;
 
     $result = false;
@@ -202,13 +202,24 @@ function block_page_module_hook($module, $method, $args = array()) {
         $args = array($args);
     }
     
+    if (strpos($moduleview, '/') === false) {
+        $module = $moduleview;
+        $view = '';
+    } else {
+        list($module, $view) = explode('/', $moduleview);
+    }
+    
+    if ($view != 'default' && !empty($view)) {
+        $view = '-'.$view;
+    } else {
+        $view = '';
+    }
+    
     // Path and function mappings.
-    $paths = array("$CFG->dirroot/mod/$module/pageitem.php"
-                        => "{$module}_$method",
-                   "$CFG->dirroot/course/format/page/plugins/$module.php"
-                        => "{$module}_$method",
-                   /* "$CFG->dirroot/course/format/page/plugins/page_item_default.php"
-                        => "page_item_default_$method" */
+    $paths = array("$CFG->dirroot/mod/{$module}/pageitem{$view}.php"
+                        => "{$module}{$view}_$method",
+                   "$CFG->dirroot/course/format/page/plugins/{$module}{$view}.php"
+                        => "{$module}{$view}_$method",
                     );
 
     foreach ($paths as $path => $function) {
