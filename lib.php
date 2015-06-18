@@ -44,7 +44,7 @@ function block_page_module_init($cmid) {
     $baseurl = '';
 
     if (!$page) {
-        require_once($CFG->dirroot.'/course/format/page/page.class.php');
+        include_once($CFG->dirroot.'/course/format/page/page.class.php');
 
         if (!$page = course_page::get_current_page()) {
             $page = new stdClass;
@@ -214,7 +214,7 @@ function block_page_module_hook($moduleview, $method, $args = array()) {
     } else {
         $view = '';
     }
-    
+
     // Path and function mappings.
     $paths = array("$CFG->dirroot/mod/{$module}/pageitem{$view}.php"
                         => "{$module}{$view}_$method",

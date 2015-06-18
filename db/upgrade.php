@@ -16,8 +16,7 @@
 // The commands in here will all be database-neutral,
 // using the functions defined in lib/ddllib.php
 
-function xmldb_block_page_module_upgrade($oldversion=0) {
-
+function xmldb_block_page_module_upgrade($oldversion = 0) {
     global $CFG, $DB;
 
     $result = true;

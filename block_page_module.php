@@ -30,7 +30,6 @@
 
 require_once($CFG->dirroot.'/blocks/page_module/lib.php');
 require_once($CFG->dirroot.'/lib/completionlib.php');
-require_once($CFG->dirroot.'/course/format/page/renderers.php');
 
 /**
  * Block class definition
@@ -46,10 +45,19 @@ class block_page_module extends block_base {
      */
     public $hideheader = true;
 
+    /**
+     * a cache for course modinfo
+     */
     protected $modinfo;
 
+    /**
+     * a cache for coursemodinfo
+     */
     protected $coursemodinfo;
 
+    /**
+     * a local cache for completion info
+     */
     protected $completioninfo;
 
     /**
@@ -69,17 +77,24 @@ class block_page_module extends block_base {
         }
     }
 
+    /**
+     * Defines which page formats can host a block instance
+     */
     public function applicable_formats() {
         // Default case: the block can be used in page format courses only
         return array('all' => false, 'course-view-page' => true);
     }
 
+    /**
+     *
+     */
     public function has_config() {
         return true;
     }
 
     /**
-     * overrides core one to add completion data in content structures
+     * Overrides core one to add completion data in content structures.
+     * The page module adds some specific block control.
      */
     public function get_content_for_output($output) {
         global $COURSE;
@@ -103,11 +118,12 @@ class block_page_module extends block_base {
             $bc->completion = new StdClass();
             $bc->completion->mod = $this->modinfo;
             $bc->completion->completioninfo = $this->completioninfo;
+        } else {
+            // Module has been deleted, or not choosen for restore
+            // return '';
         }
 
-        if (!is_null($bc)) {
-            $bc->add_class('yui3-dd-drop');
-        }
+        $bc->add_class('yui3-dd-drop');
 
         if ($this->page->user_is_editing() && has_capability('moodle/course:manageactivities', $coursecontext)) {
             $str = get_string('editmodule', 'block_page_module');
@@ -125,7 +141,6 @@ class block_page_module extends block_base {
                 $bc->controls[] = new action_menu_link_secondary($url, $icon, $str, $attributes);
             }
         }
-
         return $bc;
     }
 
@@ -134,10 +149,11 @@ class block_page_module extends block_base {
      * will display the module's pageitem hook.
      *
      * @return object
-     **/
+     */
     function get_content() {
         global $CFG, $USER, $PAGE, $COURSE;
 
+        // This contains an alterated course renderer embedded.
         $renderer = $PAGE->get_renderer('format_page');
         $courserenderer = $PAGE->get_renderer('core', 'course');
 
@@ -252,8 +268,18 @@ class block_page_module extends block_base {
         }
     }
 
-    function has_user_access($userid, $cm) {
+    /**
+     * checks if a user id has an individualisation mark for this module. the marker is a negative "hiding' mark.
+     * @param int $userid the user ID
+     * @param object $cm the course module. If not provided, takes the current Course Module ID in local configuration.
+     */
+    function has_user_access($userid, $cm = null) {
         global $DB;
+
+        if (is_null($cm)) {
+            $cm = new StdClass;
+            $cm->id = $this->config->cmid;
+        }
 
         $hidden = $DB->get_field('block_page_module_access', 'hidden', array('userid' => $userid, 'pageitemid' => $cm->id));
         return !$hidden;
@@ -284,8 +310,10 @@ class block_page_module extends block_base {
     }
 
     /**
-     * Checks for available pageitem views
+     * Checks for available pageitem views. Views are located in the format page in the "plugins" directory,
+     * or directly in moodle activity modiles implementation as a pageitem_<view>.php file.
      *
+     * @return an array of viewname => viewcontent
      */
     function get_views() {
         global $DB, $CFG;
