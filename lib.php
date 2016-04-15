@@ -55,18 +55,18 @@ function block_page_module_init($cmid) {
         if (!empty($page->id)) {
             // Since we know what page will be printed, lets get all of our records in bulk and cache the results.
             $sql = "
-                SELECT 
+                SELECT
                     c.*
-                FROM 
+                FROM
                     {course_modules} c,
                     {format_page} p,
                     {format_page_items} i
                 WHERE 
-                    i.cmid = c.id AND 
-                    p.id = i.pageid AND 
+                    i.cmid = c.id AND
+                    p.id = i.pageid AND
                     p.id = ?
             ";
-    
+
             if ($cms = $DB->get_records_sql($sql, array($page->id))) {
                 // Save for later.
                 $BLOCK_PAGE_MODULE['cms'] = $cms;
@@ -93,7 +93,6 @@ function block_page_module_init($cmid) {
             // OK, we cannot do anything cool, make sure we dont break rest of the script.
             $BLOCK_PAGE_MODULE = array('cms' => array(), 'modules' => array(), 'instances' => array());
         }
-    
     }
 
     if ($COURSE->id == SITEID) {
@@ -208,9 +207,9 @@ function block_page_module_hook($moduleview, $method, $args = array()) {
     } else {
         list($module, $view) = explode('/', $moduleview);
     }
-    
+
     if ($view != 'default' && !empty($view)) {
-        $view = '-'.$view;
+        $view = '_'.$view;
     } else {
         $view = '';
     }

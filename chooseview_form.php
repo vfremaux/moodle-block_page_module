@@ -49,7 +49,7 @@ class ChooseView_Form extends moodleform {
 
             if ($view == 'default') {
                 $coursemodinfo = get_fast_modinfo($COURSE);
-                $viewcontent = '<div class="block-page-module-view">'.$renderer->print_cm($COURSE, $coursemodinfo->cms[$theblock->config->cmid], array()).'</div>';
+                $viewcontent = '<div class="block-page-module-view section">'.$renderer->print_cm($COURSE, $coursemodinfo->cms[$theblock->config->cmid], array()).'</div>';
             } else {
                 $viewfile = str_replace('/', '_', $view);
 
@@ -73,7 +73,7 @@ class ChooseView_Form extends moodleform {
                 if (empty($fakeblock->content->text)) {
                     $fakeblock->content->text = '<div class="block-page-module-emptyview">'.get_string('emptyview', 'block_page_module').'</div>';
                 }
-                $viewcontent = '<div class="block-page-module-view">'.$fakeblock->content->text.'</div/>';
+                $viewcontent = '<div class="block-page-module-view section">'.$fakeblock->content->text.'</div/>';
                 $viewcontent = preg_replace('/<form[^>]*>/', '', $viewcontent);
                 $viewcontent = preg_replace('/<\/form>/', '', $viewcontent);
             }

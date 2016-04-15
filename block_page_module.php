@@ -185,6 +185,7 @@ class block_page_module extends block_base {
                 $this->title = format_string($this->moduleinstance->name);
 
                 // Calling hook, set_instance, and passing $this by reference.
+
                 $displayoptions = array();
                 if (!empty($this->config->view)) {
                     block_page_module_hook($this->config->view, 'set_instance', array(&$this));
@@ -199,7 +200,10 @@ class block_page_module extends block_base {
                     $this->content->text .= '<div class="dimmed">'.$this->content->text.'</div>';
                 }
 
-                $this->content->text = '<div class="mod-completion" style="float:right">'.$courserenderer->course_section_cm_completion($COURSE, $foocompletion, $this->coursemodinfo->cms[$this->cm->id]).'</div>'.$this->content->text;
+                // Important : next instruction REPLACES content. Not appending.
+                if (!empty($this->coursemodinfo->cms[$this->cm->id])) {
+                    $this->content->text = '<div class="mod-completion" style="float:right">'.$courserenderer->course_section_cm_completion($COURSE, $foocompletion, $this->coursemodinfo->cms[$this->cm->id]).'</div>'.$this->content->text;
+                }
             }
         }
         if (!$result and empty($this->content->text)) {
