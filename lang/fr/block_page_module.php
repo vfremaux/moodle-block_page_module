@@ -23,3 +23,7 @@ $string['pageindividualisationfeature'] = 'Individualisation';
 $string['configpageindividualisationfeature'] = 'Cocher cette case active les fonctions d\'individualisation du format \"page\". Ces fonctions permettent d\'activer ou de désactiver individuellement les activités pour chaque utilisateur et permet aussi d\'en planifier l\'activation dans le temps';
 $string['individualizewithtimes'] = 'Programmation dans le temps des modules';
 $string['configindividualizewithtimes'] = 'Cocher cette case active les temporisations de l\'individualisation et permet d\'activer et de désactiver les modules dans le temps';
+$string['showactivityname'] = 'Afficher le nom de l\'activité';
+$string['showactivitynamedefault'] = 'Afficher le nom de l\'activité (défaut)';
+$string['configshowactivityname'] = 'Si activé sur une instance, le nom de l\'activité sera affiché comme le titre du bloc';
+$string['page_module_settings'] = 'Réglages du bloc Module de page';

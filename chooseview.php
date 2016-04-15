@@ -15,8 +15,14 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * This script allows user to choose a rendering view for the page module instance.
+ * @package    block_page_module
+ * @category   blocks
+ * @author Mark Nielsen
+ * @author Moodle 2 Valery Fremaux
+ * @todo Could have external methods for caching cm, module, module instace records
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  *
+ * This script allows user to choose a rendering view for the page module instance.
  */
 require('../../config.php');
 require_once($CFG->dirroot.'/blocks/page_module/chooseview_form.php');
@@ -29,7 +35,10 @@ if (!$course = $DB->get_record('course', array('id' => "$id"))) {
 }
 $coursecontext = context_course::instance($course->id);
 
+// Security.
+
 require_login($course);
+require_capability('moodle/course:manageactivities', $coursecontext);
 
 if (!$instance = $DB->get_record('block_instances', array('id' => "$instanceid"))) {
     print_error('badblockinstance', 'block_page_module');

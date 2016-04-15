@@ -14,12 +14,13 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+defined('MOODLE_INTERNAL') || die();
+
 /**
- * @package block-dashboard
+ * @package block_page_module
  * @category blocks
  * @author Valery Fremaux (valery@club-internet.fr)
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL
- * @version Moodle 2.2
  */
 
 require_once $CFG->libdir.'/formslib.php';
