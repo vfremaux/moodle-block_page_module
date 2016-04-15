@@ -14,12 +14,13 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+defined('MOODLE_INTERNAL') || die();
+
 /**
- * @package block-dashboard
+ * @package block_page_module
  * @category blocks
  * @author Valery Fremaux (valery@club-internet.fr)
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL
- * @version Moodle 2.2
  */
 
 require_once $CFG->libdir.'/formslib.php';
@@ -49,7 +50,7 @@ class ChooseView_Form extends moodleform {
 
             if ($view == 'default') {
                 $coursemodinfo = get_fast_modinfo($COURSE);
-                $viewcontent = '<div class="block-page-module-view">'.$renderer->print_cm($COURSE, $coursemodinfo->cms[$theblock->config->cmid], array()).'</div>';
+                $viewcontent = '<div class="block-page-module-view section">'.$renderer->print_cm($COURSE, $coursemodinfo->cms[$theblock->config->cmid], array()).'</div>';
             } else {
                 $viewfile = str_replace('/', '_', $view);
 
@@ -73,7 +74,7 @@ class ChooseView_Form extends moodleform {
                 if (empty($fakeblock->content->text)) {
                     $fakeblock->content->text = '<div class="block-page-module-emptyview">'.get_string('emptyview', 'block_page_module').'</div>';
                 }
-                $viewcontent = '<div class="block-page-module-view">'.$fakeblock->content->text.'</div/>';
+                $viewcontent = '<div class="block-page-module-view section">'.$fakeblock->content->text.'</div/>';
                 $viewcontent = preg_replace('/<form[^>]*>/', '', $viewcontent);
                 $viewcontent = preg_replace('/<\/form>/', '', $viewcontent);
             }

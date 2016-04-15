@@ -14,21 +14,26 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+defined('MOODLE_INTERNAL') || die();
+
 /**
- * Version details
+ * Form for editing profile block settings
  *
  * @package    block_page_module
  * @category   blocks
- * @author     Valery Fremaux (valery.fremaux@gmail.com)
- * @copyright  1999 onwards Martin Dougiamas (http://dougiamas.com)
+ * @author     Valery Fremaux <valery.fremaux@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+class block_page_module_edit_form extends block_edit_form {
 
-defined('MOODLE_INTERNAL') || die();
+    protected function specific_definition($mform) {
+        global $CFG;
 
-$plugin->version   = 2014030100;        // The current plugin version (Date: YYYYMMDDXX)
-$plugin->requires  = 2014042900;        // Requires this Moodle version
-$plugin->component = 'block_page_module'; // Full name of the plugin (used for diagnostics)
-$plugin->release = '2.7.0 (Build 2014030100)';
-$plugin->maturity = MATURITY_RC;
-$plugin->dependencies = array('format_page' => 2014030100);
+        $config = get_config('block_page_module');
+
+        $mform->addElement('header', 'configheader', get_string('page_module_settings', 'block_page_module'));
+
+        $mform->addElement('checkbox', 'config_showactivityname', get_string('showactivityname', 'block_page_module'), @$config->showactivityname);
+
+    }
+}

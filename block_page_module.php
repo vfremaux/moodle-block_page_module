@@ -14,18 +14,21 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+defined('MOODLE_INTERNAL') || die();
+
 /**
  * Page Module block
+ *
+ * @package    block_page_module
+ * @category   blocks
+ * @author Mark Nielsen
+ * @author Moodle 2 Valery Fremaux
+ * @todo Could have external methods for caching cm, module, module instace records
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  *
  * Warning: $this->instance->id is actually a
  * format_page_item record ID, so DO NOT USE
  * unless you know what your doing.
- *
- * @author Mark Nielsen
- * @author Moodle 2 Valery Fremaux
- * @version $Id: block_page_module.php,v 1.9 2012-07-10 16:01:36 vf Exp $
- * @package block_page_module
- * @todo Could have external methods for caching cm, module, module instace records
  */
 
 require_once($CFG->dirroot.'/blocks/page_module/lib.php');
@@ -34,7 +37,6 @@ require_once($CFG->dirroot.'/lib/completionlib.php');
 /**
  * Block class definition
  *
- * @package block_page_module
  */
 class block_page_module extends block_base {
 
@@ -77,6 +79,30 @@ class block_page_module extends block_base {
         }
     }
 
+    public function specialization() {
+        global $DB;
+
+        if (empty($this->config->cmid) or !$DB->record_exists('course_modules', array('id' => $this->config->cmid))) {
+            if (!isset($this->config)) {
+                $this->config = new StdClass();
+            }
+            $this->config->cmid = 0;
+        } else {
+            $result = block_page_module_init($this->config->cmid);
+
+            if ($result !== false and is_array($result)) {
+    
+                // Get all of the variables out.
+                list($this->cm,     $this->module, $this->moduleinstance,
+                     $this->course, $this->coursepage,   $this->baseurl) = $result;
+    
+                if (!empty($this->config->showactivityname)) {
+                    $this->title = format_string($this->moduleinstance->name);
+                }
+            }
+        }
+    }
+
     /**
      * Defines which page formats can host a block instance
      */
@@ -90,6 +116,19 @@ class block_page_module extends block_base {
      */
     public function has_config() {
         return true;
+    }
+
+    /**
+     * Serialize and store config data
+     */
+    function instance_config_save($data, $nolongerused = false) {
+        global $DB, $COURSE;
+
+        if (!isset($data->showactivityname)) {
+            $data->showactivityname = 0;
+        }
+        $config = clone($data);
+        parent::instance_config_save($config, $nolongerused);
     }
 
     /**
@@ -107,6 +146,11 @@ class block_page_module extends block_base {
             // Get all of the variables out.
             list($this->cm,     $this->module, $this->moduleinstance,
                  $this->course, $this->coursepage,   $this->baseurl) = $result;
+        }
+
+        if (empty($this->cm)) {
+            // lost module;
+            return;
         }
 
         $bc = parent::get_content_for_output($output);
@@ -185,6 +229,7 @@ class block_page_module extends block_base {
                 $this->title = format_string($this->moduleinstance->name);
 
                 // Calling hook, set_instance, and passing $this by reference.
+
                 $displayoptions = array();
                 if (!empty($this->config->view)) {
                     block_page_module_hook($this->config->view, 'set_instance', array(&$this));
@@ -195,11 +240,22 @@ class block_page_module extends block_base {
                     $this->content->text .= $renderer->print_cm($COURSE, $this->coursemodinfo->cms[$this->cm->id], $displayoptions);
                 }
 
+                // Insert description if configration asks for
+                if ($this->cm->showdescription) {
+                    $modcontext = context_module::instance($this->cm->id);
+                    $this->moduleinstance->intro = file_rewrite_pluginfile_urls($this->moduleinstance->intro, 'pluginfile.php', $modcontext->id, $this->module->name, 'intro', 0);
+                    $this->content->text = '<div class="choice-description">'.format_text($this->moduleinstance->intro, $this->moduleinstance->introformat).'</div>'.
+                    $this->content->text;
+                }
+
                 if (!empty($this->content->text) and !$modulevisible) {
                     $this->content->text .= '<div class="dimmed">'.$this->content->text.'</div>';
                 }
 
-                $this->content->text = '<div class="mod-completion" style="float:right">'.$courserenderer->course_section_cm_completion($COURSE, $foocompletion, $this->coursemodinfo->cms[$this->cm->id]).'</div>'.$this->content->text;
+                // Important : next instruction REPLACES content. Not appending.
+                if (!empty($this->coursemodinfo->cms[$this->cm->id])) {
+                    $this->content->text = '<div class="mod-completion" style="float:right">'.$courserenderer->course_section_cm_completion($COURSE, $foocompletion, $this->coursemodinfo->cms[$this->cm->id]).'</div>'.$this->content->text;
+                }
             }
         }
         if (!$result and empty($this->content->text)) {
@@ -241,7 +297,7 @@ class block_page_module extends block_base {
      * @return boolean
      **/
     function instance_allow_config() {
-        return false;
+        return true;
     }
 
     /**
@@ -251,21 +307,6 @@ class block_page_module extends block_base {
      */
     function instance_allow_multiple() {
         return true;
-    }
-
-    /**
-     * Make sure config is set to something
-     *
-     */
-    function specialization() {
-        global $DB;
-
-        if (empty($this->config->cmid) or !$DB->record_exists('course_modules', array('id' => $this->config->cmid))) {
-            if (!isset($this->config)) {
-                $this->config = new StdClass();
-            }
-            $this->config->cmid = 0;
-        }
     }
 
     /**
