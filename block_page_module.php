@@ -242,6 +242,7 @@ class block_page_module extends block_base {
 
                 // Insert description if configration asks for
                 if ($this->cm->showdescription) {
+                    $modcontext = context_module::instance($this->cm->id);
                     $this->moduleinstance->intro = file_rewrite_pluginfile_urls($this->moduleinstance->intro, 'pluginfile.php', $modcontext->id, $this->module->name, 'intro', 0);
                     $this->content->text = '<div class="choice-description">'.format_text($this->moduleinstance->intro, $this->moduleinstance->introformat).'</div>'.
                     $this->content->text;
