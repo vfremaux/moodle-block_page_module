@@ -16,6 +16,15 @@
 // The commands in here will all be database-neutral,
 // using the functions defined in lib/ddllib.php
 
+/**
+ * @package    block_page_module
+ * @category   blocks
+ * @copyright  2003 onwards Eloy Lafuente (stronk7) {@link http://stronk7.com}
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
+defined('MOODLE_INTERNAL') || die();
+
 function xmldb_block_page_module_upgrade($oldversion = 0) {
     global $CFG, $DB;
 

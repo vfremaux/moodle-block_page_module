@@ -14,13 +14,17 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+defined('MOODLE_INTERNAL') || die();
+
 /**
  * Page module block external library
  *
- * @author Mark Nielsen
- * @version $Id: lib.php,v 1.3 2012-07-10 16:01:24 vf Exp $
- * @package block_page_module
- **/
+ * @package   block_page_module
+ * @category  blocks
+ * @author    Mark Nielsen
+ * @author    Valery Fremaux (valery.fremaux@gmail.com)
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL
+ */
 
 /**
  * Our global cache variable
@@ -200,7 +204,7 @@ function block_page_module_hook($moduleview, $method, $args = array()) {
     if (!is_array($args)) {
         $args = array($args);
     }
-    
+
     if (strpos($moduleview, '/') === false) {
         $module = $moduleview;
         $view = '';
