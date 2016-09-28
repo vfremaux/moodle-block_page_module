@@ -169,6 +169,17 @@ class block_page_module extends block_base {
 
         $bc->add_class('yui3-dd-drop');
 
+        // In this case, $subpagepattern is mandatory and holds the pageid
+        // Bloc protected pages for page module editing extensions here
+        if ($COURSE->format == 'page') {
+            $pageid = str_replace('page-', '', $this->instance->subpagepattern);
+            $page = course_page::get($pageid);
+            $context = context::instance_by_id($this->instance->parentcontextid);
+            if ($page->protected && !has_capability('format/page:editprotectedpages', $context)) {
+                return $bc;
+            }
+        }
+
         if ($this->page->user_is_editing() && has_capability('moodle/course:manageactivities', $coursecontext)) {
             $str = get_string('editmodule', 'block_page_module');
             $url = new moodle_url('/course/modedit.php', array('update' => $this->config->cmid));
@@ -240,13 +251,15 @@ class block_page_module extends block_base {
                     $this->content->text .= $renderer->print_cm($COURSE, $this->coursemodinfo->cms[$this->cm->id], $displayoptions);
                 }
 
-                // Insert description if configration asks for
+                // Insert description if configuration asks for
+                /*
                 if ($this->cm->showdescription) {
                     $modcontext = context_module::instance($this->cm->id);
                     $this->moduleinstance->intro = file_rewrite_pluginfile_urls($this->moduleinstance->intro, 'pluginfile.php', $modcontext->id, $this->module->name, 'intro', 0);
                     $this->content->text = '<div class="choice-description">'.format_text($this->moduleinstance->intro, $this->moduleinstance->introformat).'</div>'.
                     $this->content->text;
                 }
+                */
 
                 if (!empty($this->content->text) and !$modulevisible) {
                     $this->content->text .= '<div class="dimmed">'.$this->content->text.'</div>';

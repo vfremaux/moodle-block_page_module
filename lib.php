@@ -237,3 +237,15 @@ function block_page_module_hook($moduleview, $method, $args = array()) {
 
     return $result;
 }
+
+/**
+ * This function allows the tool_dbcleaner to register integrity checks
+ */
+function block_page_module_dbcleaner_add_keys() {
+    $keys = array(
+        array('block_page_module_access', 'pageitemid', 'format_page_items', 'id', ''),
+        array('block_page_module_access', 'userid', 'user', 'id', ''),
+    );
+
+    return $keys;
+}
