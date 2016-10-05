@@ -147,13 +147,15 @@ class block_page_module extends block_base {
         }
 
         if (empty($this->cm)) {
-            // lost module;
+            // Lost module.
             return;
         }
 
         $bc = parent::get_content_for_output($output);
 
-        if (empty($bc)) return;
+        if (empty($bc)) {
+            return;
+        }
 
         if (array_key_exists($this->cm->id, $this->coursemodinfo)) {
             $this->modinfo = $this->coursemodinfo->cms[$this->cm->id];
@@ -188,7 +190,8 @@ class block_page_module extends block_base {
             $views = $this->get_views();
             if (count($views) > 1) {
                 $str = get_string('changeview', 'block_page_module');
-                $url = new moodle_url('/blocks/page_module/chooseview.php', array('id' => $COURSE->id, 'instance' => $this->instance->id));
+                $params = array('id' => $COURSE->id, 'instance' => $this->instance->id);
+                $url = new moodle_url('/blocks/page_module/chooseview.php', $params);
                 $icon = new pix_icon('chooseview', $str, 'block_page_module', array('class' => 'iconsmall', 'title' => ''));
                 $attributes = array('class' => 'editing_changeview');
                 $bc->controls[] = new action_menu_link_secondary($url, $icon, $str, $attributes);
@@ -261,8 +264,8 @@ class block_page_module extends block_base {
 
                 // Important : next instruction REPLACES content. Not appending.
                 if (!empty($this->coursemodinfo->cms[$this->cm->id])) {
-                    $cmid = $this->coursemodinfo->cms[$this->cm->id];
-                    $comp = $courserenderer->course_section_cm_completion($COURSE, $foocompletion, $cmid);
+                    $cm = $this->coursemodinfo->cms[$this->cm->id];
+                    $comp = $courserenderer->course_section_cm_completion($COURSE, $foocompletion, $cm);
                     $this->content->text = '<div class="mod-completion" style="float:right">'.$comp.'</div>'.$this->content->text;
                 }
             }

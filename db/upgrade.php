@@ -43,7 +43,7 @@ function xmldb_block_page_module_upgrade($oldversion = 0) {
         // Launch rename table for block_page_module_access.
         $dbman->rename_table($table, 'block_page_module_access');
 
-        // page_module savepoint reached.
+        // Page_module savepoint reached.
         upgrade_block_savepoint(true, 2013020700, 'page_module');
     }
 
@@ -59,7 +59,7 @@ function xmldb_block_page_module_upgrade($oldversion = 0) {
             set_config('individualizewithtimes', null);
         }
 
-        // page_module savepoint reached.
+        // Page_module savepoint reached.
         upgrade_block_savepoint(true, 2016100500, 'page_module');
     }
 

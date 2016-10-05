@@ -26,7 +26,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-/**
+/*
  * Our global cache variable
  */
 global $pagemodulecache;
@@ -74,11 +74,11 @@ function block_page_module_init($cmid) {
             if ($cms = $DB->get_records_sql($sql, array($page->id))) {
                 // Save for later.
                 $pagemodulecache['cms'] = $cms;
-    
+
                 if ($modules = $DB->get_records('modules')) {
                     // Save for later.
                     $pagemodulecache['modules'] = $modules;
-    
+
                     $mods = array();
                     foreach ($cms as $cm) {
                         $mods[$modules[$cm->module]->name][] = $cm->instance;

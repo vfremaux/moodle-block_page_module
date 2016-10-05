@@ -63,8 +63,7 @@ class moodle1_block_page_module_handler extends moodle1_block_handler {
                 array()),
             new convert_path(
                 'pagemodule_access', '/MOODLE_BACKUP/COURSE/BLOCKS/BLOCK/PAGEMODULE/ACCESSES/ACCESS',
-                array()),
-       );
+                array()));
     }
 
     /**

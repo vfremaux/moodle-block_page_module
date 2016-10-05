@@ -23,7 +23,7 @@
  */
 defined('MOODLE_INTERNAL') || die();
 
-require_once($CFG->dirroot . '/blocks/page_module/backup/moodle2/backup_page_module_stepslib.php'); // We have structure steps.
+require_once($CFG->dirroot.'/blocks/page_module/backup/moodle2/backup_page_module_stepslib.php'); // We have structure steps.
 
 /**
  * Specialised backup task for the page_module block
