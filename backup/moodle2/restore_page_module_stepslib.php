@@ -14,8 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * @package    block_page_module
  * @category   blocks
@@ -23,6 +21,7 @@ defined('MOODLE_INTERNAL') || die();
  * @copyright  2003 onwards Eloy Lafuente (stronk7) {@link http://stronk7.com}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+defined('MOODLE_INTERNAL') || die();
 
 /**
  * Define all the restore steps that wll be used by the restore_page_module_block_task
@@ -38,33 +37,23 @@ class restore_page_module_block_structure_step extends restore_structure_step {
         $paths = array();
 
         $paths[] = new restore_path_element('block', '/block', true);
-        // $paths[] = new restore_path_element('page_module', '/block/page_module');
         $paths[] = new restore_path_element('access', '/block/page_module/grants/access');
 
         return $paths;
     }
 
     public function process_block($data) {
-        global $DB;
-
         // Nothing to do yet here.
     }
-    
-    /*
-     * We cannot do anything with that. 
-    public function process_page_module($data) {
-    }
-     */
 
-    /*
-    * Here we have a precedence impossibility : blocks may be restored before course format
-    * additions. We need a after_restore post processing.
-    */
+    /**
+     * Here we have a precedence impossibility : blocks may be restored before course format
+     * additions. We need a after_restore post processing.
+     */
     public function process_access($data) {
         global $DB;
 
-        $data  = (object) $data;
-        $oldid = $data->id;
+        $data = (object) $data;
 
         $data->course = $this->task->get_courseid();
         $data->userid = $this->get_mappingid('user', $data->userid);
@@ -72,6 +61,6 @@ class restore_page_module_block_structure_step extends restore_structure_step {
         $data->revealtime = $this->apply_date_offset($data->revealtime);
         $data->hidetime = $this->apply_date_offset($data->hidetime);
 
-        $accessid = $DB->insert_record('block_page_module_access', $data);
+        $DB->insert_record('block_page_module_access', $data);
     }
 }
