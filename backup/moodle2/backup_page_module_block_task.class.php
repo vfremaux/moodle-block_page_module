@@ -14,8 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * @package    block_page_module
  * @category   blocks
@@ -23,8 +21,9 @@ defined('MOODLE_INTERNAL') || die();
  * @copyright  2003 onwards Eloy Lafuente (stronk7) {@link http://stronk7.com}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+defined('MOODLE_INTERNAL') || die();
 
-require_once($CFG->dirroot . '/blocks/page_module/backup/moodle2/backup_page_module_stepslib.php'); // We have structure steps
+require_once($CFG->dirroot.'/blocks/page_module/backup/moodle2/backup_page_module_stepslib.php'); // We have structure steps.
 
 /**
  * Specialised backup task for the page_module block

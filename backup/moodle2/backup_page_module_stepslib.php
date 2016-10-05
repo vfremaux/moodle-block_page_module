@@ -14,8 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * @package    block_page_module
  * @category   blocks
@@ -23,6 +21,7 @@ defined('MOODLE_INTERNAL') || die();
  * @copyright  2003 onwards Eloy Lafuente (stronk7) {@link http://stronk7.com}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+defined('MOODLE_INTERNAL') || die();
 
 /**
  * Define all the backup steps that wll be used by the backup_page_module_block_task
@@ -38,8 +37,6 @@ class backup_page_module_block_structure_step extends backup_block_structure_ste
 
         // Get the block.
         $block = $DB->get_record('block_instances', array('id' => $this->task->get_blockid()));
-        // Extract configdata.
-        $config = unserialize(base64_decode($block->configdata));
 
         // Define each element separated.
 

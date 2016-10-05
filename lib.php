@@ -14,8 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Page module block external library
  *
@@ -26,10 +24,12 @@ defined('MOODLE_INTERNAL') || die();
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL
  */
 
-/**
+defined('MOODLE_INTERNAL') || die();
+
+/*
  * Our global cache variable
  */
-global $BLOCK_PAGE_MODULE;
+global $pagemodulecache;
 
 /**
  * External function for retrieving module data.
@@ -40,9 +40,9 @@ global $BLOCK_PAGE_MODULE;
  *
  * @param int $cmid Course Module ID
  * @return array
- **/
+ */
 function block_page_module_init($cmid) {
-    global $COURSE, $CFG, $PAGE, $BLOCK_PAGE_MODULE, $DB;
+    global $COURSE, $CFG, $PAGE, $pagemodulecache, $DB;
 
     static $page = false;
     $baseurl = '';
@@ -65,7 +65,7 @@ function block_page_module_init($cmid) {
                     {course_modules} c,
                     {format_page} p,
                     {format_page_items} i
-                WHERE 
+                WHERE
                     i.cmid = c.id AND
                     p.id = i.pageid AND
                     p.id = ?
@@ -73,12 +73,12 @@ function block_page_module_init($cmid) {
 
             if ($cms = $DB->get_records_sql($sql, array($page->id))) {
                 // Save for later.
-                $BLOCK_PAGE_MODULE['cms'] = $cms;
-    
+                $pagemodulecache['cms'] = $cms;
+
                 if ($modules = $DB->get_records('modules')) {
                     // Save for later.
-                    $BLOCK_PAGE_MODULE['modules'] = $modules;
-    
+                    $pagemodulecache['modules'] = $modules;
+
                     $mods = array();
                     foreach ($cms as $cm) {
                         $mods[$modules[$cm->module]->name][] = $cm->instance;
@@ -90,19 +90,19 @@ function block_page_module_init($cmid) {
                         }
                     }
                     // Save for later.
-                    $BLOCK_PAGE_MODULE['instances'] = $instances;
+                    $pagemodulecache['instances'] = $instances;
                 }
             }
         } else {
             // OK, we cannot do anything cool, make sure we dont break rest of the script.
-            $BLOCK_PAGE_MODULE = array('cms' => array(), 'modules' => array(), 'instances' => array());
+            $pagemodulecache = array('cms' => array(), 'modules' => array(), 'instances' => array());
         }
     }
 
     if ($COURSE->id == SITEID) {
-        $baseurl = "$CFG->wwwroot/index.php?id=$COURSE->id&amp;page=$page->id";
+        $baseurl = new moodle_url('/index.php', array('id' => $COURSE->id, 'page' => $page->id));
     } else {
-        $baseurl = "$CFG->wwwroot/course/view.php?id=$COURSE->id&amp;page=$page->id";
+        $baseurl = new moodle_url('/course/view.php', array('id' => $COURSE->id, 'page' => $page->id));
     }
 
     if (!$cm = block_page_module_get_cm($cmid, $page->id)) {
@@ -125,9 +125,9 @@ function block_page_module_init($cmid) {
  * @return mixed
  **/
 function block_page_module_get_cm($cmid) {
-    global $BLOCK_PAGE_MODULE, $DB;
+    global $pagemodulecache, $DB;
 
-    $cms = &$BLOCK_PAGE_MODULE['cms'];
+    $cms = &$pagemodulecache['cms'];
 
     if (empty($cms[$cmid])) {
         if (!$cm = $DB->get_record('course_modules', array('id' => $cmid))) {
@@ -146,9 +146,9 @@ function block_page_module_get_cm($cmid) {
  * @return mixed
  **/
 function block_page_module_get_module($moduleid) {
-    global $BLOCK_PAGE_MODULE, $DB;
+    global $pagemodulecache, $DB;
 
-    $modules = &$BLOCK_PAGE_MODULE['modules'];
+    $modules = &$pagemodulecache['modules'];
 
     if (empty($modules[$moduleid])) {
         if (!$module = $DB->get_record('modules', array('id' => $moduleid))) {
@@ -168,9 +168,9 @@ function block_page_module_get_module($moduleid) {
  * @return mixed
  **/
 function block_page_module_get_instance($name, $id) {
-    global $BLOCK_PAGE_MODULE, $DB;
+    global $pagemodulecache, $DB;
 
-    $instances = &$BLOCK_PAGE_MODULE['instances'];
+    $instances = &$pagemodulecache['instances'];
 
     if (empty($instances[$name]) or empty($instances[$name][$id])) {
         if (!$moduleinstance = $DB->get_record($name, array('id' => $id))) {
@@ -195,7 +195,7 @@ function block_page_module_get_instance($name, $id) {
  * @param string $method Function that will be called (A prefix will be added)
  * @param mixed $args This will be passed to the hook function
  * @return mixed
- **/
+ */
 function block_page_module_hook($moduleview, $method, $args = array()) {
     global $CFG;
 
@@ -219,11 +219,8 @@ function block_page_module_hook($moduleview, $method, $args = array()) {
     }
 
     // Path and function mappings.
-    $paths = array("$CFG->dirroot/mod/{$module}/pageitem{$view}.php"
-                        => "{$module}{$view}_$method",
-                   "$CFG->dirroot/course/format/page/plugins/{$module}{$view}.php"
-                        => "{$module}{$view}_$method",
-                    );
+    $paths = array("$CFG->dirroot/mod/{$module}/pageitem{$view}.php" => "{$module}{$view}_$method",
+                   "$CFG->dirroot/course/format/page/plugins/{$module}{$view}.php" => "{$module}{$view}_$method");
 
     foreach ($paths as $path => $function) {
         if (file_exists($path)) {
@@ -236,4 +233,14 @@ function block_page_module_hook($moduleview, $method, $args = array()) {
     }
 
     return $result;
+}
+
+/**
+ * This function allows the tool_dbcleaner to register integrity checks
+ */
+function block_page_module_dbcleaner_add_keys() {
+    $keys = array(array('block_page_module_access', 'pageitemid', 'format_page_items', 'id', ''),
+                  array('block_page_module_access', 'userid', 'user', 'id', ''));
+
+    return $keys;
 }

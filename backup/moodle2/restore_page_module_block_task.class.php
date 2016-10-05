@@ -14,8 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * @package    block_page_module
  * @category   blocks
@@ -23,8 +21,9 @@ defined('MOODLE_INTERNAL') || die();
  * @copyright  2003 onwards Eloy Lafuente (stronk7) {@link http://stronk7.com}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+defined('MOODLE_INTERNAL') || die();
 
-require_once($CFG->dirroot . '/blocks/page_module/backup/moodle2/restore_page_module_stepslib.php'); // We have structure steps
+require_once($CFG->dirroot.'/blocks/page_module/backup/moodle2/restore_page_module_stepslib.php'); // We have structure steps.
 
 /**
  * Specialised restore task for the page_module block
@@ -57,7 +56,7 @@ class restore_page_module_block_task extends restore_block_task {
     static public function define_decode_rules() {
         return array();
     }
-    
+
     // Each block will be responsible for his own remapping in is associated pageid.
     public function after_restore() {
         global $DB;
@@ -67,7 +66,9 @@ class restore_page_module_block_task extends restore_block_task {
         $oldblockid = $this->get_old_blockid();
 
         // These are fake blocks that can be cached in backup.
-        if (!$blockid) return;
+        if (!$blockid) {
+            return;
+        }
 
         // Get the old block reference.
         $sql = "
@@ -88,7 +89,7 @@ class restore_page_module_block_task extends restore_block_task {
                 $pageitem->cmid = $this->get_mappingid('course_module', $pageitem->cmid);
             }
             $DB->update_record('format_page_items', $pageitem);
-            
+
             $bi = $DB->get_record('block_instances', array('id' => $blockid));
 
             // Adjust the serialized configdata->cmid to the actualized course module.
@@ -108,8 +109,9 @@ class restore_page_module_block_task extends restore_block_task {
             $bi->subpagepattern = 'page-'.$newpageid;
             $DB->update_record('block_instances', $bi);
 
-            if ($subpage = $DB->get_field('block_positions', 'subpage', array('blockinstanceid' => $blockid, 'contextid' => $bi->parentcontextid))) {
-                $DB->set_field('block_positions', 'subpage', 'page-'.$newpageid, array('blockinstanceid' => $blockid, 'contextid' => $bi->parentcontextid));
+            $params = array('blockinstanceid' => $blockid, 'contextid' => $bi->parentcontextid);
+            if ($DB->get_field('block_positions', 'subpage', $params)) {
+                $DB->set_field('block_positions', 'subpage', 'page-'.$newpageid, $params);
             }
 
         } else {
