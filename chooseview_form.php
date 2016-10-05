@@ -14,20 +14,19 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * @package block_page_module
  * @category blocks
  * @author Valery Fremaux (valery@club-internet.fr)
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL
  */
+defined('MOODLE_INTERNAL') || die();
 
-require_once $CFG->libdir.'/formslib.php';
+require_once($CFG->libdir.'/formslib.php');
 
 class ChooseView_Form extends moodleform {
 
-    function definition() {
+    public function definition() {
         global $PAGE, $COURSE, $CFG;
 
         $mform = $this->_form;
@@ -50,7 +49,8 @@ class ChooseView_Form extends moodleform {
 
             if ($view == 'default') {
                 $coursemodinfo = get_fast_modinfo($COURSE);
-                $viewcontent = '<div class="block-page-module-view section">'.$renderer->print_cm($COURSE, $coursemodinfo->cms[$theblock->config->cmid], array()).'</div>';
+                $cmstr = $renderer->print_cm($COURSE, $coursemodinfo->cms[$theblock->config->cmid], array());
+                $viewcontent = '<div class="block-page-module-view section">'.$cmstr.'</div>';
             } else {
                 $viewfile = str_replace('/', '_', $view);
 
@@ -72,7 +72,8 @@ class ChooseView_Form extends moodleform {
                 $func = $modname.$viewname.'_set_instance';
                 $func($fakeblock);
                 if (empty($fakeblock->content->text)) {
-                    $fakeblock->content->text = '<div class="block-page-module-emptyview">'.get_string('emptyview', 'block_page_module').'</div>';
+                    $label = get_string('emptyview', 'block_page_module');
+                    $fakeblock->content->text = '<div class="block-page-module-emptyview">'.$label.'</div>';
                 }
                 $viewcontent = '<div class="block-page-module-view section">'.$fakeblock->content->text.'</div/>';
                 $viewcontent = preg_replace('/<form[^>]*>/', '', $viewcontent);

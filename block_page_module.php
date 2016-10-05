@@ -14,8 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Page Module block
  *
@@ -30,6 +28,7 @@ defined('MOODLE_INTERNAL') || die();
  * format_page_item record ID, so DO NOT USE
  * unless you know what your doing.
  */
+defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot.'/blocks/page_module/lib.php');
 require_once($CFG->dirroot.'/lib/completionlib.php');
@@ -82,7 +81,7 @@ class block_page_module extends block_base {
     public function specialization() {
         global $DB;
 
-        if (empty($this->config->cmid) or !$DB->record_exists('course_modules', array('id' => $this->config->cmid))) {
+        if (empty($this->config->cmid) || !$DB->record_exists('course_modules', array('id' => $this->config->cmid))) {
             if (!isset($this->config)) {
                 $this->config = new StdClass();
             }
@@ -107,7 +106,7 @@ class block_page_module extends block_base {
      * Defines which page formats can host a block instance
      */
     public function applicable_formats() {
-        // Default case: the block can be used in page format courses only
+        // Default case: the block can be used in page format courses only.
         return array('all' => false, 'course-view-page' => true);
     }
 
@@ -149,7 +148,7 @@ class block_page_module extends block_base {
         }
 
         if (empty($this->cm)) {
-            // lost module;
+            // Lost module.
             return;
         }
 
@@ -163,14 +162,16 @@ class block_page_module extends block_base {
             $bc->completion->mod = $this->modinfo;
             $bc->completion->completioninfo = $this->completioninfo;
         } else {
-            // Module has been deleted, or not choosen for restore
-            // return '';
+            // Module has been deleted, or not choosen for restore.
+            assert(true);
         }
 
         $bc->add_class('yui3-dd-drop');
 
-        // In this case, $subpagepattern is mandatory and holds the pageid
-        // Bloc protected pages for page module editing extensions here
+        /*
+         * In this case, $subpagepattern is mandatory and holds the pageid
+         * Bloc protected pages for page module editing extensions here
+         */
         if ($COURSE->format == 'page') {
             $pageid = str_replace('page-', '', $this->instance->subpagepattern);
             $page = course_page::get($pageid);
@@ -190,7 +191,8 @@ class block_page_module extends block_base {
             $views = $this->get_views();
             if (count($views) > 1) {
                 $str = get_string('changeview', 'block_page_module');
-                $url = new moodle_url('/blocks/page_module/chooseview.php', array('id' => $COURSE->id, 'instance' => $this->instance->id));
+                $params = array('id' => $COURSE->id, 'instance' => $this->instance->id);
+                $url = new moodle_url('/blocks/page_module/chooseview.php', $params);
                 $icon = new pix_icon('chooseview', $str, 'block_page_module', array('class' => 'iconsmall', 'title' => ''));
                 $attributes = array('class' => 'editing_changeview');
                 $bc->controls[] = new action_menu_link_secondary($url, $icon, $str, $attributes);
@@ -235,7 +237,8 @@ class block_page_module extends block_base {
 
             // Check module visibility.
             $modulevisible = $this->instance->visible && $this->cm->visible && $this->has_user_access($USER->id, $this->cm);
-            if ($modulevisible or has_capability('moodle/course:viewhiddenactivities', context_course::instance($this->course->id))) {
+            $context = context_course::instance($this->course->id);
+            if ($modulevisible or has_capability('moodle/course:viewhiddenactivities', $context)) {
                 // Default: set title to instance name.
                 $this->title = format_string($this->moduleinstance->name);
 
@@ -250,16 +253,6 @@ class block_page_module extends block_base {
                 if (empty($this->content->text) && array_key_exists($this->config->cmid, $this->coursemodinfo->cms)) {
                     $this->content->text .= $renderer->print_cm($COURSE, $this->coursemodinfo->cms[$this->cm->id], $displayoptions);
                 }
-
-                // Insert description if configuration asks for
-                /*
-                if ($this->cm->showdescription) {
-                    $modcontext = context_module::instance($this->cm->id);
-                    $this->moduleinstance->intro = file_rewrite_pluginfile_urls($this->moduleinstance->intro, 'pluginfile.php', $modcontext->id, $this->module->name, 'intro', 0);
-                    $this->content->text = '<div class="choice-description">'.format_text($this->moduleinstance->intro, $this->moduleinstance->introformat).'</div>'.
-                    $this->content->text;
-                }
-                */
 
                 if (!empty($this->content->text) and !$modulevisible) {
                     $this->content->text .= '<div class="dimmed">'.$this->content->text.'</div>';
@@ -347,14 +340,16 @@ class block_page_module extends block_base {
         global $DB;
 
         $now = time();
-        if ($revealswitches = $DB->get_records_select('block_page_module_access', ' revealtime > ? AND revealtime != 0 ', array($now))) {
+        $select = ' revealtime > ? AND revealtime != 0 ';
+        if ($revealswitches = $DB->get_records_select('block_page_module_access', $select, array($now))) {
             foreach ($revealswitches as $sw) {
                 $sw->revealtime = 0;
                 $sw->hidden = 0;
                 $DB->update_record('block_page_module_access', $sw);
             }
         }
-        if ($hideswitches = $DB->get_records_select('block_page_module_access', ' hidetime > ? AND hidetime != 0 ', array($now))) {
+        $select = ' hidetime > ? AND hidetime != 0 ';
+        if ($hideswitches = $DB->get_records_select('block_page_module_access', $select, array($now))) {
             foreach ($revealswitches as $sw) {
                 $sw->hidetime = 0;
                 $sw->hidden = 1;
@@ -385,7 +380,9 @@ class block_page_module extends block_base {
             foreach ($views as $view) {
                 $parts = pathinfo($view);
                 $filename = $parts['filename'];
-                if ($filename == 'page_item_default') continue;
+                if ($filename == 'page_item_default') {
+                    continue;
+                }
                 if ($filename == $modname) {
                     $viewlist[$modname] = get_string('defaultpageview', 'block_page_module');
                 } else {
@@ -401,8 +398,10 @@ class block_page_module extends block_base {
                 }
             }
         } else {
-            // Last try : for non standardly handled modules, check in plugin directory.
-            // We seek for page_item.php file or page_item_wviewname>.php
+            /*
+             * Last try : for non standardly handled modules, check in plugin directory.
+             * We seek for page_item.php file or page_item_wviewname>.php
+             */
             if ($views = glob($CFG->dirroot.'/mod/'.$modname.'/pageitem*.php')) {
                 foreach ($views as $view) {
                     $parts = pathinfo($view);
