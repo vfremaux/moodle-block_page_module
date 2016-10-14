@@ -48,7 +48,7 @@ function block_page_module_init($cmid) {
     $baseurl = '';
 
     if (!$page) {
-        include_once($CFG->dirroot.'/course/format/page/page.class.php');
+        include_once($CFG->dirroot.'/course/format/page/classes/page.class.php');
 
         if (!$page = course_page::get_current_page()) {
             $page = new stdClass;
