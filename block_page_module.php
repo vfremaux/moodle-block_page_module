@@ -81,7 +81,8 @@ class block_page_module extends block_base {
     public function specialization() {
         global $DB;
 
-        if (empty($this->config->cmid) or !$DB->record_exists('course_modules', array('id' => $this->config->cmid))) {
+        if (empty($this->config->cmid) ||
+                !$DB->record_exists('course_modules', array('id' => $this->config->cmid))) {
             if (!isset($this->config)) {
                 $this->config = new StdClass();
             }
@@ -169,11 +170,16 @@ class block_page_module extends block_base {
 
         $bc->add_class('yui3-dd-drop');
 
-        // In this case, $subpagepattern is mandatory and holds the pageid.
-        // Bloc protected pages for page module editing extensions here.
+        /*
+         * In this case, $subpagepattern is mandatory and holds the pageid
+         * Bloc protected pages for page module editing extensions here
+         */
         if ($COURSE->format == 'page') {
             $pageid = str_replace('page-', '', $this->instance->subpagepattern);
             $page = course_page::get($pageid);
+            if (empty($page)) {
+                return '';
+            }
             $context = context::instance_by_id($this->instance->parentcontextid);
             if ($page->protected && !has_capability('format/page:editprotectedpages', $context)) {
                 return $bc;
@@ -408,8 +414,10 @@ class block_page_module extends block_base {
                 }
             }
         } else {
-            // Last try : for non standardly handled modules, check in plugin directory.
-            // We seek for page_item.php file or page_item_wviewname>.php.
+            /*
+             * Last try : for non standardly handled modules, check in plugin directory.
+             * We seek for page_item.php file or page_item_wviewname>.php
+             */
             if ($views = glob($CFG->dirroot.'/mod/'.$modname.'/pageitem*.php')) {
                 foreach ($views as $view) {
                     $parts = pathinfo($view);
