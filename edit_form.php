@@ -27,7 +27,6 @@ defined('MOODLE_INTERNAL') || die();
 class block_page_module_edit_form extends block_edit_form {
 
     protected function specific_definition($mform) {
-        global $CFG;
 
         $config = get_config('block_page_module');
 
@@ -35,6 +34,5 @@ class block_page_module_edit_form extends block_edit_form {
 
         $label = get_string('showactivityname', 'block_page_module');
         $mform->addElement('checkbox', 'config_showactivityname', $label, @$config->showactivityname);
-
     }
 }

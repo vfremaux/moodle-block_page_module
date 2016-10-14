@@ -38,8 +38,12 @@ class ChooseView_Form extends moodleform {
 
         if ($result !== false and is_array($result)) {
             // Get all of the variables out.
-            list($theblock->cm,     $theblock->module, $theblock->moduleinstance,
-                 $theblock->course, $theblock->coursepage,   $theblock->baseurl) = $result;
+            list($theblock->cm,
+                 $theblock->module,
+                 $theblock->moduleinstance,
+                 $theblock->course,
+                 $theblock->coursepage,
+                 $theblock->baseurl) = $result;
         }
 
         $views = $theblock->get_views();
@@ -49,8 +53,8 @@ class ChooseView_Form extends moodleform {
 
             if ($view == 'default') {
                 $coursemodinfo = get_fast_modinfo($COURSE);
-                $cmstr = $renderer->print_cm($COURSE, $coursemodinfo->cms[$theblock->config->cmid], array());
-                $viewcontent = '<div class="block-page-module-view section">'.$cmstr.'</div>';
+                $cm = $coursemodinfo->cms[$theblock->config->cmid];
+                $viewcontent = '<div class="block-page-module-view section">'.$renderer->print_cm($COURSE, $cm, array()).'</div>';
             } else {
                 $viewfile = str_replace('/', '_', $view);
 
@@ -72,8 +76,8 @@ class ChooseView_Form extends moodleform {
                 $func = $modname.$viewname.'_set_instance';
                 $func($fakeblock);
                 if (empty($fakeblock->content->text)) {
-                    $label = get_string('emptyview', 'block_page_module');
-                    $fakeblock->content->text = '<div class="block-page-module-emptyview">'.$label.'</div>';
+                    $emptystr = get_string('emptyview', 'block_page_module');
+                    $fakeblock->content->text = '<div class="block-page-module-emptyview">'.$emptystr.'</div>';
                 }
                 $viewcontent = '<div class="block-page-module-view section">'.$fakeblock->content->text.'</div/>';
                 $viewcontent = preg_replace('/<form[^>]*>/', '', $viewcontent);
