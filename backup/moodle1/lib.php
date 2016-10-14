@@ -57,20 +57,13 @@ class moodle1_block_page_module_handler extends moodle1_block_handler {
         return array(
             new convert_path(
                 'pagemodule', '/MOODLE_BACKUP/BLOCKS/BLOCK/PAGEMODULE',
-                array(
-                )
-            ),
+                array()),
             new convert_path(
                 'pagemodule_grants', '/MOODLE_BACKUP/BLOCKS/BLOCK/PAGEMODULE/ACCESSES',
-                array(
-                )
-            ),
+                array()),
             new convert_path(
                 'pagemodule_access', '/MOODLE_BACKUP/COURSE/BLOCKS/BLOCK/PAGEMODULE/ACCESSES/ACCESS',
-                array(
-                )
-            ),
-       );
+                array()));
     }
 
     /**
@@ -78,10 +71,10 @@ class moodle1_block_page_module_handler extends moodle1_block_handler {
      * data available
      */
     public function process_pagemodule($data) {
-        // get the course module id and context id
+        // Get the course module id and context id.
         $instanceid = $data['id'];
 
-        // create page_module.xml
+        // Create page_module.xml.
         $this->open_xml_writer("blocks/blocks/page_module_{$instanceid}/page_module.xml");
 
         $this->xmlwriter->begin_tag('page_module', array('id' => $instanceid, 'blockname' => 'page_module'));
@@ -118,5 +111,4 @@ class moodle1_block_page_module_handler extends moodle1_block_handler {
     public function process_pagemodule_access($data) {
         $this->write_xml('access', $data);
     }
-
 }
