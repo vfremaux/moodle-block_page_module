@@ -14,21 +14,26 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * @package block_page_module
  * @category blocks
  * @author Valery Fremaux (valery@club-internet.fr)
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL
  */
+defined('MOODLE_INTERNAL') || die();
 
-$settings->add(new admin_setting_configcheckbox('showactivityname', get_string('showactivitynamedefault', 'block_page_module'),
-                   get_string('configshowactivityname', 'block_page_module'), false));
+$key = 'block_page_module/showactivityname';
+$label = get_string('showactivitynamedefault', 'block_page_module');
+$desc = get_string('configshowactivityname', 'block_page_module');
+$settings->add(new admin_setting_configcheckbox($key, $label, $desc, false));
 
-$settings->add(new admin_setting_configcheckbox('pageindividualisationfeature', get_string('pageindividualisationfeature', 'block_page_module'),
-                   get_string('configpageindividualisationfeature', 'block_page_module'), false));
+$key = 'block_page_module/pageindividualisationfeature';
+$label = get_string('pageindividualisationfeature', 'block_page_module');
+$desc = get_string('configpageindividualisationfeature', 'block_page_module');
+$settings->add(new admin_setting_configcheckbox($key, $label, $desc, false));
 
-$settings->add(new admin_setting_configcheckbox('individualizewithtimes', get_string('individualizewithtimes', 'block_page_module'),
-                   get_string('configindividualizewithtimes', 'block_page_module'), true));
+$key = 'block_page_module/individualizewithtimes';
+$label = get_string('individualizewithtimes', 'block_page_module');
+$desc = get_string('configindividualizewithtimes', 'block_page_module');
+$settings->add(new admin_setting_configcheckbox($key, $label, $desc, true));
 
