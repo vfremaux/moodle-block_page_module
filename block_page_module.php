@@ -163,9 +163,6 @@ class block_page_module extends block_base {
             $bc->completion = new StdClass();
             $bc->completion->mod = $this->modinfo;
             $bc->completion->completioninfo = $this->completioninfo;
-        } else {
-            // Module has been deleted, or not choosen for restore.
-            return;
         }
 
         $bc->add_class('yui3-dd-drop');
