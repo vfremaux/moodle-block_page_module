@@ -30,7 +30,6 @@ $string['pluginname'] = 'Page module';
 $string['displayerror'] = 'An error occured in displaying this module.';
 $string['displaymodule'] = 'Display module';
 $string['editmodule'] = 'Edit module settings';
-$string['copymodule'] = 'Duplicate module';
 $string['linkview'] = 'Default view (link)';
 $string['changeview'] = 'Change the activity layout';
 $string['chooseview'] = 'Choose the activity layout';
