@@ -29,6 +29,7 @@ $string['blockname'] = 'Module de Page';
 $string['displayerror'] = 'Une erreur est survenue à l\'affichage de ce module.';
 $string['displaymodule'] = 'Montrer le module';
 $string['editmodule'] = 'Réglages de l\'activité';
+$string['copymodule'] = 'Dupliquer l\'activité';
 $string['linkview'] = 'Vue standard (lien)';
 $string['chooseview'] = 'Choisir l\'apparence de l\'activité';
 $string['changeview'] = 'Changer l\'apparence de l\'activité';
