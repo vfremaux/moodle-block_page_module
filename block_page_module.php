@@ -257,6 +257,7 @@ class block_page_module extends block_base {
             // Check module visibility.
             $modulevisible = $this->instance->visible && $this->cm->visible && $this->has_user_access($USER->id, $this->cm);
             $coursecontext = context_course::instance($this->course->id);
+
             if ($modulevisible or has_capability('moodle/course:viewhiddenactivities', $coursecontext)) {
                 // Default: set title to instance name.
                 $this->title = format_string($this->moduleinstance->name);
