@@ -1,0 +1,10 @@
+{
+    "name": "vfremaux/moodle-block_page_module",
+    "type": "moodle-block",
+    "require": {
+        "composer/installers": "~1.0"
+    },
+    "extra": {
+        "installer-name": "page_module"
+    }
+}
