@@ -81,6 +81,9 @@ class ChooseView_Form extends moodleform {
                 }
                 $viewcontent = '<div class="block-page-module-view section">'.$fakeblock->content->text.'</div/>';
                 $viewcontent = preg_replace('/<form[^>]*>/', '', $viewcontent);
+                $viewcontent = preg_replace('/<input name="id[^>]*>/', '', $viewcontent);
+                $viewcontent = preg_replace('/<input name="sesskey[^>]*>/', '', $viewcontent);
+                $viewcontent = preg_replace('/<input name="action[^>]*>/', '', $viewcontent);
                 $viewcontent = preg_replace('/<\/form>/', '', $viewcontent);
             }
 
