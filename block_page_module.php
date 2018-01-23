@@ -168,14 +168,15 @@ class block_page_module extends block_base {
         $bc->add_class('yui3-dd-drop');
 
         /*
-         * In this case, $subpagepattern is mandatory and holds the pageid
+         * $subpagepattern may hold the pageid
          * Bloc protected pages for page module editing extensions here
          */
         if ($COURSE->format == 'page') {
             $pageid = str_replace('page-', '', $this->instance->subpagepattern);
             $page = course_page::get($pageid);
+            // Let unpaged pass as "all pages blocks";
             if (empty($page)) {
-                return '';
+                $page = course_page::get_current_page($COURSE->id);
             }
             $context = context::instance_by_id($this->instance->parentcontextid);
             if ($page->protected && !has_capability('format/page:editprotectedpages', $context)) {
@@ -183,10 +184,22 @@ class block_page_module extends block_base {
             }
         }
 
+        // Add some additional controls.
         if ($this->page->user_is_editing() && has_capability('moodle/course:manageactivities', $coursecontext)) {
             $str = get_string('editmodule', 'block_page_module');
             $url = new moodle_url('/course/modedit.php', array('update' => $this->config->cmid));
             $icon = new pix_icon('t/edit', $str, 'moodle', array('class' => 'iconsmall', 'title' => ''));
+            $attributes = array('class' => 'editing_edit');
+            $bc->controls[] = new action_menu_link_secondary($url, $icon, $str, $attributes);
+
+            $str = get_string('copymodule', 'block_page_module');
+            $params = array('id' => $COURSE->id,
+                            'sesskey' => sesskey(),
+                            'duplicate' => $this->config->cmid,
+                            'section' => $page->id, // Carefull to that.
+                            'insertinpage' => 1);
+            $url = new moodle_url('/course/format/page/mod.php', $params);
+            $icon = new pix_icon('t/copy', $str, 'moodle', array('class' => 'iconsmall', 'title' => ''));
             $attributes = array('class' => 'editing_edit');
             $bc->controls[] = new action_menu_link_secondary($url, $icon, $str, $attributes);
 
@@ -241,9 +254,17 @@ class block_page_module extends block_base {
                  $this->coursepage,
                  $this->baseurl) = $result;
 
+            $coursemodinfo = get_fast_modinfo($this->course);
+            $mod = $coursemodinfo->get_cm($this->config->cmid);
+
             // Check module visibility.
-            $modulevisible = $this->instance->visible && $this->cm->visible && $this->has_user_access($USER->id, $this->cm);
+            $modulevisible = $this->instance->visible &&
+                                    $mod->uservisible &&
+                                            $this->has_user_access($USER->id, $this->cm) &&
+                                                    empty($mod->availableinfo);
+
             $coursecontext = context_course::instance($this->course->id);
+
             if ($modulevisible or has_capability('moodle/course:viewhiddenactivities', $coursecontext)) {
                 // Default: set title to instance name.
                 $this->title = format_string($this->moduleinstance->name);
@@ -262,7 +283,7 @@ class block_page_module extends block_base {
                 }
 
                 if (!empty($this->content->text) and !$modulevisible) {
-                    $this->content->text .= '<div class="dimmed">'.$this->content->text.'</div>';
+                    $this->content->text = '<div class="dimmed">'.$this->content->text.'</div>';
                 }
 
                 // Important : next instruction REPLACES content. Not appending.
@@ -285,6 +306,8 @@ class block_page_module extends block_base {
      * @return array
      */
     public function html_attributes() {
+        global $COURSE, $PAGE;
+
         $result = block_page_module_init($this->config->cmid);
 
         if ($result !== false and is_array($result)) {
@@ -298,7 +321,16 @@ class block_page_module extends block_base {
                  $this->baseurl) = $result;
         }
 
-        return array('id' => 'inst'.$this->instance->id, 'class' => 'block block_'. $this->name().' mod-'.@$this->module->name);
+        $extraclasses = '';
+        if ($COURSE->format == 'page' && $PAGE->user_is_editing()) {
+            $pageid = str_replace('page-', '', $this->instance->subpagepattern);
+            if (!$pageid) {
+                // this is a "all pages block";
+                $extraclasses = ' allpages';
+            }
+        }
+
+        return array('id' => 'inst'.$this->instance->id, 'class' => 'block block_'. $this->name().' mod-'.@$this->module->name.$extraclasses);
     }
 
     /**
