@@ -254,9 +254,17 @@ class block_page_module extends block_base {
                  $this->coursepage,
                  $this->baseurl) = $result;
 
+            $coursemodinfo = get_fast_modinfo($this->course);
+            $mod = $coursemodinfo->get_cm($this->config->cmid);
+
             // Check module visibility.
-            $modulevisible = $this->instance->visible && $this->cm->visible && $this->has_user_access($USER->id, $this->cm);
+            $modulevisible = $this->instance->visible &&
+                                    $mod->uservisible &&
+                                            $this->has_user_access($USER->id, $this->cm) &&
+                                                    empty($mod->availableinfo);
+
             $coursecontext = context_course::instance($this->course->id);
+
             if ($modulevisible or has_capability('moodle/course:viewhiddenactivities', $coursecontext)) {
                 // Default: set title to instance name.
                 $this->title = format_string($this->moduleinstance->name);
@@ -275,7 +283,7 @@ class block_page_module extends block_base {
                 }
 
                 if (!empty($this->content->text) and !$modulevisible) {
-                    $this->content->text .= '<div class="dimmed">'.$this->content->text.'</div>';
+                    $this->content->text = '<div class="dimmed">'.$this->content->text.'</div>';
                 }
 
                 // Important : next instruction REPLACES content. Not appending.
