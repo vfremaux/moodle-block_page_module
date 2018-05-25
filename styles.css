@@ -1,49 +1,64 @@
 
-.block_page_module{
-    background:transparent !important;
-    border:none !important;
-    margin-bottom:15px;
-    margin-top:15px;
+.block_page_module {
+    background: transparent !important;
+    border: none !important;
+    margin-bottom: 15px;
+    margin-top: 15px;
 }
 
 /* Make everything dimmed */
 
-.block_page_module div.dimmed{
-    -moz-opacity:0.4;
-    background-color:#F0F0F0 !important;
+.block_page_module div.dimmed {
+    -moz-opacity: 0.4;
+    background-color: #f0f0f0 !important;
     filter: alpha(opacity=40);
     opacity:0.4;
 }
 
 .block-page-module-view {
-    background-color:#f0f0f0;
-    border-radius:8px;
-    border:1px solid #e0e0e0;
-    margin:5px;
-    padding:10px;
+    background-color: #f0f0f0;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+    margin: 5px;
+    padding: 10px;
 }
 
 .block-page-module-emptyview {
-    -moz-opacity:0.4;
-    background-color:#f0f0f0;
-    border-radius:8px;
-    border:2px dashed #808080;
-    margin:5px;
-    opacity:0.4;
-    padding:10px;
+    -moz-opacity: 0.4;
+    background-color: #f0f0f0;
+    border-radius: 8px;
+    border: 2px dashed #808080;
+    margin: 5px;
+    opacity: 0.4;
+    padding: 10px;
 }
 
 /* special set for choice embedded module */
 
-.block_page_module .choices .option label {vertical-align: top;}
-.block_page_module .choices .option input {vertical-align: middle;}
+.block_page_module .choices .option label {
+    vertical-align: top;
+}
+
+.block_page_module .choices .option input {
+    vertical-align: middle;
+}
 
 .block_page_module .horizontal,
-.block_page_module .vertical {margin-left: 10%;margin-right: 10%;}
+.block_page_module .vertical {
+    margin-left: 10%;
+    margin-right: 10%;
+}
+
 .block_page_module .horizontal .choices .option {
     display: inline-block;
     padding-right: 20px;
     white-space: normal;
 }
-.block_page_module .horizontal .choices .button {margin-top: 10px;}
-.block_page_module ul.choices li {list-style:none;}
+
+.block_page_module .horizontal .choices .button {
+    margin-top: 10px;
+}
+
+.block_page_module ul.choices li {
+    list-style: none;
+}
