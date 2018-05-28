@@ -44,3 +44,4 @@ $string['showactivityname'] = 'Afficher le nom de l\'activité';
 $string['showactivitynamedefault'] = 'Afficher le nom de l\'activité (défaut)';
 $string['configshowactivityname'] = 'Si activé sur une instance, le nom de l\'activité sera affiché comme le titre du bloc';
 $string['page_module_settings'] = 'Réglages du bloc Module de page';
+$string['internalerrorlostmodule'] = 'Une erreur interne a rendu cet élément indisponible. Vous devriez supprimer ce bloc et le rajouter à nouveau.';

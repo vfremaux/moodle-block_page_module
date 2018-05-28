@@ -45,3 +45,4 @@ $string['showactivityname'] = 'Show activity name';
 $string['showactivitynamedefault'] = 'Show activity name (default)';
 $string['configshowactivityname'] = 'If enabled, activity name will be shown as block\'s title';
 $string['page_module_settings'] = 'Page Module block Settings';
+$string['internalerrorlostmodule'] = 'Something is wrong with this course module and could not be repaired. You should delete this block and try to set it once more.';
