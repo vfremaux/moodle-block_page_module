@@ -244,7 +244,7 @@ class block_page_module extends block_base {
         // Gets all of our variables and caches result.
         $result = block_page_module_init($this->config->cmid);
 
-        if ($result !== false and is_array($result)) {
+        if ($result !== false && is_array($result)) {
 
             // Get all of the variables out.
             list($this->cm,
@@ -255,9 +255,35 @@ class block_page_module extends block_base {
                  $this->baseurl) = $result;
 
             $coursemodinfo = get_fast_modinfo($this->course);
-            $mod = $coursemodinfo->get_cm($this->config->cmid);
+            try {
+                $mod = $coursemodinfo->get_cm($this->config->cmid);
+            } catch (Exception $ex) {
+                // Second try, after course modinfo rebuild.
+                rebuild_course_cache($COURSE->id);
+                try {
+                    $mod = $coursemodinfo->get_cm($this->config->cmid);
+                } catch (Exception $ex) {
+                    $context = context_course::instance($COURSE->id);
+                    if (has_capability('moodle/course:manageactivities', $context)) {
+                        $this->content->text = get_string('internalerrorlostmodule', 'block_page_module');
+                    } else {
+                        $this->content->text = null;
+                    }
+                    return $this->content;
+                }
+            }
 
             // Check module visibility.
+            // FIX Edunao/barchen-9.
+            // @see patch in course/format/page/__patch/lib/modinfolib.php
+            /*
+             * Dynamically set the operational section id in the module in the context
+             * it is used in the page module instance.
+             */
+            $pagesection = $this->coursepage->get_pagesection();
+            $mod->section = $pagesection->id;
+            // FIX
+
             $modulevisible = $this->instance->visible &&
                                     $mod->uservisible &&
                                             $this->has_user_access($USER->id, $this->cm) &&
@@ -277,12 +303,13 @@ class block_page_module extends block_base {
                 } else {
                     block_page_module_hook($this->module->name.'/default', 'set_instance', array(&$this));
                 }
+
                 if (empty($this->content->text) && array_key_exists($this->config->cmid, $this->coursemodinfo->cms)) {
                     $cm = $this->coursemodinfo->cms[$this->cm->id];
                     $this->content->text .= $renderer->print_cm($COURSE, $cm, $displayoptions);
                 }
 
-                if (!empty($this->content->text) and !$modulevisible) {
+                if (!empty($this->content->text) && !$modulevisible) {
                     $this->content->text = '<div class="dimmed">'.$this->content->text.'</div>';
                 }
 
