@@ -23,7 +23,11 @@
  * @category blocks
  */
 
+// Capabilities.
 $string['page_module:addinstance'] = 'Can add an instance';
+
+// Privacy.
+$string['privacy:metadata'] = 'The Page Module block does not store any personal data about any user.';
 
 $string['blockname'] = 'Page module';
 $string['pluginname'] = 'Page module';

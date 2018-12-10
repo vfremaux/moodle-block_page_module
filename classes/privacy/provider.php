@@ -14,23 +14,18 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * Version details.
- *
- * @package     block_page_module
- * @category    blocks
- * @author      Valery Fremaux <valery.fremaux@gmail.com>
- * @copyright   2010 onwards Valery Fremaux (http://www.mylearningfactory.com)
- * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
+namespace block_page_module\privacy;
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2016100500;        // The current plugin version (Date: YYYYMMDDXX).
-$plugin->requires  = 2018112800;        // Requires this Moodle version.
-$plugin->component = 'block_page_module'; // Full name of the plugin (used for diagnostics).
-$plugin->release = '3.6.0 (Build 2016100500)';
-$plugin->maturity = MATURITY_STABLE;
-
-// Non moodle attributes.
-$plugin->codeincrement = '3.6.0001';
+class provider implements \core_privacy\local\metadata\null_provider {
+    /**
+     * Get the language string identifier with the component's language
+     * file to explain why this plugin stores no data.
+     *
+     * @return  string
+     */
+    public static function get_reason() : string {
+        return 'privacy:metadata';
+    }
+}

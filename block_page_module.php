@@ -281,7 +281,9 @@ class block_page_module extends block_base {
              * it is used in the page module instance.
              */
             $pagesection = $this->coursepage->get_pagesection();
-            $mod->section = $pagesection->id;
+            if ($pagesection) {
+                $mod->section = $pagesection->id;
+            }
             // FIX
 
             $modulevisible = $this->instance->visible &&
@@ -316,7 +318,12 @@ class block_page_module extends block_base {
                 // Important : next instruction REPLACES content. Not appending.
                 if (!empty($this->coursemodinfo->cms[$this->cm->id])) {
                     $cm = $this->coursemodinfo->cms[$this->cm->id];
-                    $comp = $courserenderer->course_section_cm_completion($COURSE, $foocompletion, $cm);
+                    $completion = new completion_info($COURSE);
+                    if ($completion->is_enabled($cm)) {
+                        $comp = $courserenderer->course_section_cm_completion($COURSE, $foocompletion, $cm);
+                    } else {
+                        $comp = '';
+                    }
                     $this->content->text = '<div class="mod-completion" style="float:right">'.$comp.'</div>'.$this->content->text;
                 }
             }
