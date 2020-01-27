@@ -26,6 +26,8 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+use \format\page\course_page;
+
 /*
  * Our global cache variable
  */

@@ -19,8 +19,6 @@ namespace block_page_module\privacy;
 defined('MOODLE_INTERNAL') || die();
 
 class provider implements \core_privacy\local\metadata\null_provider {
-<<<<<<< HEAD
-=======
     /**
      * Get the language string identifier with the component's language
      * file to explain why this plugin stores no data.
@@ -30,5 +28,4 @@ class provider implements \core_privacy\local\metadata\null_provider {
     public static function get_reason() : string {
         return 'privacy:metadata';
     }
->>>>>>> MOODLE_36_STABLE
 }

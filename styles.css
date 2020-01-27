@@ -62,3 +62,14 @@
 .block_page_module ul.choices li {
     list-style: none;
 }
+
+.shadow > * {
+    -moz-opacity:0.5;
+    opacity:0.5;
+}
+
+/* fix some tool masking effect */
+.page-module-label .block-controls {
+    position: relative;
+    top: -30px;
+}
