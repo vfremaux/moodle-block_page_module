@@ -26,6 +26,8 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+use \format\page\course_page;
+
 /*
  * Our global cache variable
  */
@@ -219,8 +221,8 @@ function block_page_module_hook($moduleview, $method, $args = array()) {
     }
 
     // Path and function mappings.
-    $paths = array("$CFG->dirroot/mod/{$module}/pageitem{$view}.php" => "{$module}{$view}_$method",
-                   "$CFG->dirroot/course/format/page/plugins/{$module}{$view}.php" => "{$module}{$view}_$method");
+    $paths = array($CFG->dirroot."/mod/{$module}/pageitem{$view}.php" => "{$module}{$view}_$method",
+                   $CFG->dirroot."/course/format/page/plugins/{$module}{$view}.php" => "{$module}{$view}_$method");
 
     foreach ($paths as $path => $function) {
         if (file_exists($path)) {

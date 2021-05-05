@@ -30,6 +30,8 @@
  */
 defined('MOODLE_INTERNAL') || die();
 
+use \format\page\course_page;
+
 require_once($CFG->dirroot.'/blocks/page_module/lib.php');
 require_once($CFG->dirroot.'/lib/completionlib.php');
 
@@ -147,6 +149,7 @@ class block_page_module extends block_base {
                  $this->course, $this->coursepage,   $this->baseurl) = $result;
         }
 
+        $debug = optional_param('debug', '', PARAM_INT);
         if (empty($this->cm)) {
             // Lost module.
             return;
@@ -166,6 +169,7 @@ class block_page_module extends block_base {
         }
 
         $bc->add_class('yui3-dd-drop');
+        $bc->modname = $this->module->name;
 
         /*
          * $subpagepattern may hold the pageid
@@ -223,7 +227,7 @@ class block_page_module extends block_base {
      * @return object
      */
     public function get_content() {
-        global $USER, $PAGE, $COURSE;
+        global $USER, $PAGE, $COURSE, $CFG;
 
         // This contains an alterated course renderer embedded.
         $renderer = $PAGE->get_renderer('format_page');
@@ -244,7 +248,7 @@ class block_page_module extends block_base {
         // Gets all of our variables and caches result.
         $result = block_page_module_init($this->config->cmid);
 
-        if ($result !== false and is_array($result)) {
+        if ($result !== false && is_array($result)) {
 
             // Get all of the variables out.
             list($this->cm,
@@ -255,17 +259,57 @@ class block_page_module extends block_base {
                  $this->baseurl) = $result;
 
             $coursemodinfo = get_fast_modinfo($this->course);
-            $mod = $coursemodinfo->get_cm($this->config->cmid);
+            try {
+                $mod = $coursemodinfo->get_cm($this->config->cmid);
+            } catch (Exception $ex) {
+                // Second try, after course modinfo rebuild.
+                rebuild_course_cache($COURSE->id);
+                try {
+                    $mod = $coursemodinfo->get_cm($this->config->cmid);
+                } catch (Exception $ex) {
+                    $context = context_course::instance($COURSE->id);
+                    if (has_capability('moodle/course:manageactivities', $context)) {
+                        $this->content->text = get_string('internalerrorlostmodule', 'block_page_module');
+                    } else {
+                        $this->content->text = null;
+                    }
+                    return $this->content;
+                }
+            }
 
             // Check module visibility.
+            // FIX Edunao/barchen-9.
+            // @see patch in course/format/page/__patch/lib/modinfolib.php
+            /*
+             * Dynamically set the operational section id in the module in the context
+             * it is used in the page module instance.
+             */
+            $pagesection = $this->coursepage->get_pagesection();
+            if ($pagesection) {
+                $mod->section = $pagesection->id;
+            }
+            // FIX
+
             $modulevisible = $this->instance->visible &&
                                     $mod->uservisible &&
                                             $this->has_user_access($USER->id, $this->cm) &&
                                                     empty($mod->availableinfo);
 
+            $modulevisiblestatic = $this->instance->visible && $mod->visible;
+            $debug = optional_param('debug', false, PARAM_BOOL);
+            if ($debug && $CFG->debug > DEBUG_NORMAL) {
+                echo '<pre>';
+                echo "Block instance is visible : {$this->instance->visible}\n";
+                echo "Module instance is visible : {$mod->uservisible}\n";
+                echo "User has access (format page specific) : ".$this->has_user_access($USER->id, $this->cm)."\n";
+                echo "Availability restrictions : " . $mod->availableinfo."\n";
+                echo "<b>Resulting :</b> " . $modulevisible."\n";
+                echo '</pre>';
+            }
+
             $coursecontext = context_course::instance($this->course->id);
 
-            if ($modulevisible or has_capability('moodle/course:viewhiddenactivities', $coursecontext)) {
+            if ($modulevisible || has_capability('moodle/course:viewhiddenactivities', $coursecontext)) {
                 // Default: set title to instance name.
                 $this->title = format_string($this->moduleinstance->name);
 
@@ -277,19 +321,26 @@ class block_page_module extends block_base {
                 } else {
                     block_page_module_hook($this->module->name.'/default', 'set_instance', array(&$this));
                 }
+
+                // No hook could make the content, probably not pageable module, so use the standard cm rendering.
                 if (empty($this->content->text) && array_key_exists($this->config->cmid, $this->coursemodinfo->cms)) {
                     $cm = $this->coursemodinfo->cms[$this->cm->id];
                     $this->content->text .= $renderer->print_cm($COURSE, $cm, $displayoptions);
                 }
 
-                if (!empty($this->content->text) and !$modulevisible) {
-                    $this->content->text = '<div class="dimmed">'.$this->content->text.'</div>';
+                if (!empty($this->content->text) && !$modulevisiblestatic) {
+                    // $this->content->text = '<div class="shadow">'.$this->content->text.'</div>';
                 }
 
                 // Important : next instruction REPLACES content. Not appending.
-                if (!empty($this->coursemodinfo->cms[$this->cm->id])) {
+                if (array_key_exists($this->cm->id, $this->coursemodinfo->cms)) {
                     $cm = $this->coursemodinfo->cms[$this->cm->id];
-                    $comp = $courserenderer->course_section_cm_completion($COURSE, $foocompletion, $cm);
+                    $completion = new completion_info($COURSE);
+                    if ($completion->is_enabled($cm) && !is_null($USER)) {
+                        $comp = $courserenderer->course_section_cm_completion($COURSE, $completion, $cm);
+                    } else {
+                        $comp = '';
+                    }
                     $this->content->text = '<div class="mod-completion" style="float:right">'.$comp.'</div>'.$this->content->text;
                 }
             }

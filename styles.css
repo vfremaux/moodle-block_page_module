@@ -12,7 +12,7 @@
     -moz-opacity: 0.4;
     background-color: #f0f0f0 !important;
     filter: alpha(opacity=40);
-    opacity:0.4;
+    opacity: 0.4;
 }
 
 .block-page-module-view {
@@ -61,4 +61,15 @@
 
 .block_page_module ul.choices li {
     list-style: none;
+}
+
+.shadow > * {
+    -moz-opacity:0.5;
+    opacity:0.5;
+}
+
+/* fix some tool masking effect */
+.page-module-label .block-controls {
+    position: relative;
+    top: -30px;
 }
