@@ -55,6 +55,12 @@ class ChooseView_Form extends moodleform {
                 $coursemodinfo = get_fast_modinfo($COURSE);
                 $cm = $coursemodinfo->cms[$theblock->config->cmid];
                 $viewcontent = '<div class="block-page-module-view section">'.$renderer->print_cm($COURSE, $cm, array()).'</div>';
+                $viewcontent = preg_replace('/<form[^>]*>/', '', $viewcontent);
+                $viewcontent = preg_replace('/<input type="hidden"[^>]*>/', '', $viewcontent);
+                $viewcontent = preg_replace('/<input name="id[^>]*>/', '', $viewcontent);
+                $viewcontent = preg_replace('/<input name="sesskey[^>]*>/', '', $viewcontent);
+                $viewcontent = preg_replace('/<input name="action[^>]*>/', '', $viewcontent);
+                $viewcontent = preg_replace('/<\/form>/', '', $viewcontent);
             } else {
                 $viewfile = str_replace('/', '_', $view);
 
@@ -81,6 +87,7 @@ class ChooseView_Form extends moodleform {
                 }
                 $viewcontent = '<div class="block-page-module-view section">'.$fakeblock->content->text.'</div/>';
                 $viewcontent = preg_replace('/<form[^>]*>/', '', $viewcontent);
+                $viewcontent = preg_replace('/<input type="hidden"[^>]*>/', '', $viewcontent);
                 $viewcontent = preg_replace('/<input name="id[^>]*>/', '', $viewcontent);
                 $viewcontent = preg_replace('/<input name="sesskey[^>]*>/', '', $viewcontent);
                 $viewcontent = preg_replace('/<input name="action[^>]*>/', '', $viewcontent);
