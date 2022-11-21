@@ -138,7 +138,7 @@ class block_page_module extends block_base {
      * The page module adds some specific block control.
      */
     public function get_content_for_output($output) {
-        global $COURSE, $SESSION;
+        global $COURSE;
 
         $coursecontext = context_course::instance($COURSE->id);
 
@@ -156,7 +156,6 @@ class block_page_module extends block_base {
                 debug_trace("Lost module. empty CM from id [$this->config->cmid} ", TRACE_DEBUG);
                 echo "Lost module. empty CM from id [$this->config->cmid} ";
             }
-            $SESSION->mayneedpagesectionfix = $COURSE->id;
             // Lost module.
             return;
         }
@@ -168,7 +167,6 @@ class block_page_module extends block_base {
                 debug_trace("Lost module. empty \$bc ", TRACE_DEBUG_FINE);
                 echo "Lost module. empty \$bc ";
             }
-            $SESSION->mayneedpagesectionfix = $COURSE->id;
             return;
         }
 
@@ -240,7 +238,7 @@ class block_page_module extends block_base {
      * @return object
      */
     public function get_content() {
-        global $USER, $PAGE, $COURSE, $CFG;
+        global $USER, $PAGE, $COURSE, $CFG, $OUTPUT;
 
         // This contains an alterated course renderer embedded.
         $renderer = $PAGE->get_renderer('format_page');
@@ -361,7 +359,12 @@ class block_page_module extends block_base {
                     $cm = $this->coursemodinfo->cms[$this->cm->id];
                     $completion = new completion_info($COURSE);
                     if ($completion->is_enabled($cm) && !is_null($USER)) {
-                        $comp = $courserenderer->course_section_cm_completion($COURSE, $completion, $cm);
+                        // Old pre 4.0
+                        // $comp = $courserenderer->course_section_cm_completion($COURSE, $completion, $cm);
+                        $completiondetails = \core_completion\cm_completion_details::get_instance($cm, $USER->id); // Fetch completion information. 
+                        $activitydates = \core\activity_dates::get_dates_for_module($cm, $USER->id); // Fetch activity dates.
+                        $comp = $OUTPUT->activity_information($cm, $completiondetails, $activitydates);
+
                     } else {
                         $comp = '';
                     }
