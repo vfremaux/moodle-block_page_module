@@ -31,7 +31,7 @@ $plugin->requires  = 2020060900;        // Requires this Moodle version.
 $plugin->component = 'block_page_module'; // Full name of the plugin (used for diagnostics).
 $plugin->release = '3.9.0 (Build 2019091600)';
 $plugin->maturity = MATURITY_STABLE;
-$plugin->supports = [38,39];
+$plugin->supported = [39,311];
 
 // Non moodle attributes.
 $plugin->codeincrement = '3.9.0002';
