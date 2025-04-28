@@ -18,15 +18,14 @@
  * Page module block external library
  *
  * @package   block_page_module
- * @category  blocks
- * @author    Mark Nielsen
- * @author    Valery Fremaux (valery.fremaux@gmail.com)
+ * @author    Mark Nielsen, Valery Fremaux (valery.fremaux@gmail.com)
+ * @copyright       2016 onwards Valery Fremaux (valery.fremaux@gmail.com)
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-use \format\page\course_page;
+use format_page\course_page;
 
 /*
  * Our global cache variable
@@ -42,9 +41,12 @@ global $pagemodulecache;
  *
  * @param int $cmid Course Module ID
  * @return array
+ * phpcs:disable moodle.Commenting.ValidTags.Invalid
+ * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+ * @SuppressWarnings(PHPMD.NPathComplexity)
  */
 function block_page_module_init($cmid) {
-    global $COURSE, $CFG, $PAGE, $pagemodulecache, $DB;
+    global $COURSE, $CFG, $pagemodulecache, $DB;
 
     static $page = false;
     $baseurl = '';
@@ -73,7 +75,7 @@ function block_page_module_init($cmid) {
                     p.id = ?
             ";
 
-            if ($cms = $DB->get_records_sql($sql, array($page->id))) {
+            if ($cms = $DB->get_records_sql($sql, [$page->id])) {
                 // Save for later.
                 $pagemodulecache['cms'] = $cms;
 
@@ -81,11 +83,11 @@ function block_page_module_init($cmid) {
                     // Save for later.
                     $pagemodulecache['modules'] = $modules;
 
-                    $mods = array();
+                    $mods = [];
                     foreach ($cms as $cm) {
                         $mods[$modules[$cm->module]->name][] = $cm->instance;
                     }
-                    $instances = array();
+                    $instances = [];
                     foreach ($mods as $modname => $instanceids) {
                         if ($records = $DB->get_records_list($modname, 'id', implode(',', $instanceids))) {
                             $instances[$modname] = $records;
@@ -97,14 +99,14 @@ function block_page_module_init($cmid) {
             }
         } else {
             // OK, we cannot do anything cool, make sure we dont break rest of the script.
-            $pagemodulecache = array('cms' => array(), 'modules' => array(), 'instances' => array());
+            $pagemodulecache = ['cms' => [], 'modules' => [], 'instances' => []];
         }
     }
 
     if ($COURSE->id == SITEID) {
-        $baseurl = new moodle_url('/index.php', array('id' => $COURSE->id, 'page' => $page->id));
+        $baseurl = new moodle_url('/index.php', ['id' => $COURSE->id, 'page' => $page->id]);
     } else {
-        $baseurl = new moodle_url('/course/view.php', array('id' => $COURSE->id, 'page' => $page->id));
+        $baseurl = new moodle_url('/course/view.php', ['id' => $COURSE->id, 'page' => $page->id]);
     }
 
     if (!$cm = block_page_module_get_cm($cmid, $page->id)) {
@@ -117,7 +119,7 @@ function block_page_module_init($cmid) {
         return false;
     }
 
-    return array($cm, $module, $moduleinstance, $COURSE, $page, $baseurl);
+    return [$cm, $module, $moduleinstance, $COURSE, $page, $baseurl];
 }
 
 /**
@@ -132,7 +134,7 @@ function block_page_module_get_cm($cmid) {
     $cms = &$pagemodulecache['cms'];
 
     if (empty($cms[$cmid])) {
-        if (!$cm = $DB->get_record('course_modules', array('id' => $cmid))) {
+        if (!$cm = $DB->get_record('course_modules', ['id' => $cmid])) {
             return false;
         }
         $cms[$cm->id] = $cm;
@@ -153,7 +155,7 @@ function block_page_module_get_module($moduleid) {
     $modules = &$pagemodulecache['modules'];
 
     if (empty($modules[$moduleid])) {
-        if (!$module = $DB->get_record('modules', array('id' => $moduleid))) {
+        if (!$module = $DB->get_record('modules', ['id' => $moduleid])) {
             return false;
         }
         $modules[$module->id] = $module;
@@ -174,8 +176,8 @@ function block_page_module_get_instance($name, $id) {
 
     $instances = &$pagemodulecache['instances'];
 
-    if (empty($instances[$name]) or empty($instances[$name][$id])) {
-        if (!$moduleinstance = $DB->get_record($name, array('id' => $id))) {
+    if (empty($instances[$name]) || empty($instances[$name][$id])) {
+        if (!$moduleinstance = $DB->get_record($name, ['id' => $id])) {
             return false;
         }
         $instances[$name][$id] = $moduleinstance;
@@ -198,13 +200,13 @@ function block_page_module_get_instance($name, $id) {
  * @param mixed $args This will be passed to the hook function
  * @return mixed
  */
-function block_page_module_hook($moduleview, $method, $args = array()) {
+function block_page_module_hook($moduleview, $method, $args = []) {
     global $CFG;
 
     $result = false;
 
     if (!is_array($args)) {
-        $args = array($args);
+        $args = [$args];
     }
 
     if (strpos($moduleview, '/') === false) {
@@ -221,8 +223,8 @@ function block_page_module_hook($moduleview, $method, $args = array()) {
     }
 
     // Path and function mappings.
-    $paths = array($CFG->dirroot."/mod/{$module}/pageitem{$view}.php" => "{$module}{$view}_$method",
-                   $CFG->dirroot."/course/format/page/plugins/{$module}{$view}.php" => "{$module}{$view}_$method");
+    $paths = [$CFG->dirroot."/mod/{$module}/pageitem{$view}.php" => "{$module}{$view}_$method",
+                   $CFG->dirroot."/course/format/page/plugins/{$module}{$view}.php" => "{$module}{$view}_$method"];
 
     foreach ($paths as $path => $function) {
         if (file_exists($path)) {
@@ -241,8 +243,8 @@ function block_page_module_hook($moduleview, $method, $args = array()) {
  * This function allows the tool_dbcleaner to register integrity checks
  */
 function block_page_module_dbcleaner_add_keys() {
-    $keys = array(array('block_page_module_access', 'pageitemid', 'format_page_items', 'id', ''),
-                  array('block_page_module_access', 'userid', 'user', 'id', ''));
+    $keys = [['block_page_module_access', 'pageitemid', 'format_page_items', 'id', ''],
+                  ['block_page_module_access', 'userid', 'user', 'id', '']];
 
     return $keys;
 }

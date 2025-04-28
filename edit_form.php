@@ -18,14 +18,19 @@
  * Form for editing profile block settings
  *
  * @package    block_page_module
- * @category   blocks
  * @author     Valery Fremaux <valery.fremaux@gmail.com>
+ * @copyright       2016 onwards Valery Fremaux (valery.fremaux@gmail.com)
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-defined('MOODLE_INTERNAL') || die();
 
+/**
+ * Form class
+ */
 class block_page_module_edit_form extends block_edit_form {
 
+    /**
+     * Standard definition.
+     */
     protected function specific_definition($mform) {
 
         $config = get_config('block_page_module');
@@ -33,6 +38,7 @@ class block_page_module_edit_form extends block_edit_form {
         $mform->addElement('header', 'configheader', get_string('page_module_settings', 'block_page_module'));
 
         $label = get_string('showactivityname', 'block_page_module');
-        $mform->addElement('checkbox', 'config_showactivityname', $label, @$config->showactivityname);
+        $mform->addElement('checkbox', 'config_showactivityname', '', $label);
+        $mform->setDefault('config_showactivityname', $config->showactivityname ?? false);
     }
 }

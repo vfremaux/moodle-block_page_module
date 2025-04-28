@@ -17,10 +17,10 @@
 /**
  * Block Page Module Language File
  *
- * @author Mark Nielsen
- * @author Valery Fremaux (valery.fremaux@gmail.com)
- * @package block_page_module
- * @category blocks
+ * @package     block_page_module
+ * @author      Mark Nielsen, Valery Fremaux (valery@gmail.com.fr)
+ * @copyright   2016 onwards Valery Fremaux (www.activeprolearn.com)
+ * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL
  */
 
 $string['page_module:addinstance'] = 'Peut ajouter une instance';

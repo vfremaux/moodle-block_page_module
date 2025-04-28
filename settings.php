@@ -15,11 +15,14 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package block_page_module
- * @category blocks
- * @author Valery Fremaux (valery@club-internet.fr)
- * @license http://www.gnu.org/copyleft/gpl.html GNU GPL
+ * global settings.
+ *
+ * @package     block_page_module
+ * @author      Valery Fremaux (valery@gmail.com)
+ * @copyright   2016 onwards Valery Fremaux (valery.fremaux@gmail.com)
+ * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL
  */
+
 defined('MOODLE_INTERNAL') || die();
 
 $key = 'block_page_module/showactivityname';

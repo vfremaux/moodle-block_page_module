@@ -15,17 +15,25 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package block_page_module
- * @category blocks
- * @author Valery Fremaux (valery@club-internet.fr)
- * @license http://www.gnu.org/copyleft/gpl.html GNU GPL
+ * Form to choose view
+ *
+ * @package    block_page_module
+ * @author Mark Nielsen, Valery Fremaux
+ * @copyright       2016 onwards Valery Fremaux (valery.fremaux@gmail.com)
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir.'/formslib.php');
 
+/**
+ * Form class.
+ */
 class ChooseView_Form extends moodleform {
 
+    /**
+     * Standard definition
+     */
     public function definition() {
         global $PAGE, $COURSE, $CFG;
 
@@ -36,7 +44,7 @@ class ChooseView_Form extends moodleform {
 
         $result = block_page_module_init($theblock->config->cmid);
 
-        if ($result !== false and is_array($result)) {
+        if ($result !== false && is_array($result)) {
             // Get all of the variables out.
             list($theblock->cm,
                  $theblock->module,
@@ -54,7 +62,13 @@ class ChooseView_Form extends moodleform {
             if ($view == 'default') {
                 $coursemodinfo = get_fast_modinfo($COURSE);
                 $cm = $coursemodinfo->cms[$theblock->config->cmid];
-                $viewcontent = '<div class="block-page-module-view section">'.$renderer->print_cm($COURSE, $cm, array()).'</div>';
+                $viewcontent = '<div class="block-page-module-view section">'.$renderer->print_cm($COURSE, $cm, []).'</div>';
+                $viewcontent = preg_replace('/<form[^>]*>/', '', $viewcontent);
+                $viewcontent = preg_replace('/<input type="hidden"[^>]*>/', '', $viewcontent);
+                $viewcontent = preg_replace('/<input name="id[^>]*>/', '', $viewcontent);
+                $viewcontent = preg_replace('/<input name="sesskey[^>]*>/', '', $viewcontent);
+                $viewcontent = preg_replace('/<input name="action[^>]*>/', '', $viewcontent);
+                $viewcontent = preg_replace('/<\/form>/', '', $viewcontent);
             } else {
                 $viewfile = str_replace('/', '_', $view);
 
@@ -81,6 +95,7 @@ class ChooseView_Form extends moodleform {
                 }
                 $viewcontent = '<div class="block-page-module-view section">'.$fakeblock->content->text.'</div/>';
                 $viewcontent = preg_replace('/<form[^>]*>/', '', $viewcontent);
+                $viewcontent = preg_replace('/<input type="hidden"[^>]*>/', '', $viewcontent);
                 $viewcontent = preg_replace('/<input name="id[^>]*>/', '', $viewcontent);
                 $viewcontent = preg_replace('/<input name="sesskey[^>]*>/', '', $viewcontent);
                 $viewcontent = preg_replace('/<input name="action[^>]*>/', '', $viewcontent);

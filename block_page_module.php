@@ -18,49 +18,49 @@
  * Page Module block
  *
  * @package    block_page_module
- * @category   blocks
- * @author Mark Nielsen
- * @author Moodle 2 Valery Fremaux
- * @todo Could have external methods for caching cm, module, module instace records
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @author Mark Nielsen, Valery Fremaux
+ * @copyright       2016 onwards Valery Fremaux (valery.fremaux@gmail.com)
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  *
+ * @todo Could have external methods for caching cm, module, module instace records
  * Warning: $this->instance->id is actually a
  * format_page_item record ID, so DO NOT USE
  * unless you know what your doing.
  */
 defined('MOODLE_INTERNAL') || die();
 
-use \format\page\course_page;
+use format_page\course_page;
 
 require_once($CFG->dirroot.'/blocks/page_module/lib.php');
 require_once($CFG->dirroot.'/lib/completionlib.php');
+require_once($CFG->dirroot.'/course/format/page/classes/page.class.php');
 
 /**
  * Block class definition
- *
+ * phpcs:disable moodle.Commenting.ValidTags.Invalid
+ * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+ * @SuppressWarnings(PHPMD.NPathComplexity)
+ * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
+ * @SuppressWarnings(PHPMD.ExcessiveClassLength)
+ * @SuppressWarnings(PHPMD.ExcessivePublicCount)
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity)
+ * @SuppressWarnings(PHPMD.TooManyMethods)
+ * @SuppressWarnings(PHPMD.TooManyFields)
+ * @SuppressWarnings(PHPMD.TooManyPublicMethods)
+ * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
  */
 class block_page_module extends block_base {
 
-    /**
-     * Hide block header or not
-     *
-     * @var boolean
-     */
+    /** @var Hide block header or not */
     public $hideheader = true;
 
-    /**
-     * a cache for course modinfo
-     */
+    /** @var a cache for course modinfo */
     protected $modinfo;
 
-    /**
-     * a cache for coursemodinfo
-     */
+    /** @var a cache for coursemodinfo */
     protected $coursemodinfo;
 
-    /**
-     * a local cache for completion info
-     */
+    /** @var a local cache for completion info */
     protected $completioninfo;
 
     /**
@@ -80,11 +80,14 @@ class block_page_module extends block_base {
         }
     }
 
+    /**
+     * Block instance specialisation.
+     */
     public function specialization() {
         global $DB;
 
         if (empty($this->config->cmid) ||
-                !$DB->record_exists('course_modules', array('id' => $this->config->cmid))) {
+                !$DB->record_exists('course_modules', ['id' => $this->config->cmid])) {
             if (!isset($this->config)) {
                 $this->config = new StdClass();
             }
@@ -92,7 +95,7 @@ class block_page_module extends block_base {
         } else {
             $result = block_page_module_init($this->config->cmid);
 
-            if ($result !== false and is_array($result)) {
+            if ($result !== false && is_array($result)) {
 
                 // Get all of the variables out.
                 list($this->cm,     $this->module, $this->moduleinstance,
@@ -110,7 +113,7 @@ class block_page_module extends block_base {
      */
     public function applicable_formats() {
         // Default case: the block can be used in page format courses only.
-        return array('all' => false, 'course-view-page' => true);
+        return ['all' => false, 'course-view-page' => true];
     }
 
     /**
@@ -135,15 +138,16 @@ class block_page_module extends block_base {
     /**
      * Overrides core one to add completion data in content structures.
      * The page module adds some specific block control.
+     * @param object $output
      */
     public function get_content_for_output($output) {
-        global $COURSE;
+        global $COURSE, $SESSION;
 
         $coursecontext = context_course::instance($COURSE->id);
 
         $result = block_page_module_init($this->config->cmid);
 
-        if ($result !== false and is_array($result)) {
+        if ($result !== false && is_array($result)) {
             // Get all of the variables out.
             list($this->cm,     $this->module, $this->moduleinstance,
                  $this->course, $this->coursepage,   $this->baseurl) = $result;
@@ -151,6 +155,11 @@ class block_page_module extends block_base {
 
         $debug = optional_param('debug', '', PARAM_INT);
         if (empty($this->cm)) {
+            if ($debug) {
+                debug_trace("Lost module. empty CM from id [$this->config->cmid} ", TRACE_DEBUG);
+                echo "Lost module. empty CM from id [$this->config->cmid} ";
+            }
+            $SESSION->mayneedpagesectionfix = $COURSE->id;
             // Lost module.
             return;
         }
@@ -158,20 +167,29 @@ class block_page_module extends block_base {
         $bc = parent::get_content_for_output($output);
 
         if (empty($bc)) {
+            if ($debug) {
+                debug_trace("Lost module. empty \$bc ", TRACE_DEBUG_FINE);
+                echo "Lost module. empty \$bc ";
+            }
+            $SESSION->mayneedpagesectionfix = $COURSE->id;
             return;
         }
 
-        if (array_key_exists($this->cm->id, $this->coursemodinfo)) {
+        if (array_key_exists($this->cm->id, $this->coursemodinfo->cms)) {
             $this->modinfo = $this->coursemodinfo->cms[$this->cm->id];
             $bc->completion = new StdClass();
             $bc->completion->mod = $this->modinfo;
             $bc->completion->completioninfo = $this->completioninfo;
         }
 
-        // Obsolete 3.6 ? 
-        // $bc->add_class('yui3-dd-drop');
-
         $bc->modname = $this->module->name;
+
+        // Mark alternate view in block's classes.
+        $view = $this->config->view ?? '';
+        if (!empty($view) && $view != 'default') {
+            $bc->add_class('is-alternate-view');
+            $bc->add_class('alternate-view-'.$this->config->view);
+        }
 
         /*
          * $subpagepattern may hold the pageid
@@ -180,7 +198,7 @@ class block_page_module extends block_base {
         if ($COURSE->format == 'page') {
             $pageid = str_replace('page-', '', $this->instance->subpagepattern);
             $page = course_page::get($pageid);
-            // Let unpaged pass as "all pages blocks";
+            // Let unpaged pass as "all pages blocks".
             if (empty($page)) {
                 $page = course_page::get_current_page($COURSE->id);
             }
@@ -193,32 +211,33 @@ class block_page_module extends block_base {
         // Add some additional controls.
         if ($this->page->user_is_editing() && has_capability('moodle/course:manageactivities', $coursecontext)) {
             $str = get_string('editmodule', 'block_page_module');
-            $url = new moodle_url('/course/modedit.php', array('update' => $this->config->cmid));
-            $icon = new pix_icon('t/edit', $str, 'moodle', array('class' => 'iconsmall', 'title' => ''));
-            $attributes = array('class' => 'editing_edit');
+            $url = new moodle_url('/course/modedit.php', ['update' => $this->config->cmid]);
+            $icon = new pix_icon('t/edit', $str, 'moodle', ['class' => 'iconsmall', 'title' => '']);
+            $attributes = ['class' => 'editing_edit'];
             $bc->controls[] = new action_menu_link_secondary($url, $icon, $str, $attributes);
 
             $str = get_string('copymodule', 'block_page_module');
-            $params = array('id' => $COURSE->id,
+            $params = ['id' => $COURSE->id,
                             'sesskey' => sesskey(),
                             'duplicate' => $this->config->cmid,
-                            'section' => $page->id, // Carefull to that.
-                            'insertinpage' => 1);
+                            'section' => $page->get_section(), // Carefull to that.
+                            'insertinpage' => $page->id];
             $url = new moodle_url('/course/format/page/mod.php', $params);
-            $icon = new pix_icon('t/copy', $str, 'moodle', array('class' => 'iconsmall', 'title' => ''));
-            $attributes = array('class' => 'editing_edit');
+            $icon = new pix_icon('t/copy', $str, 'moodle', ['class' => 'iconsmall', 'title' => '']);
+            $attributes = ['class' => 'editing_edit'];
             $bc->controls[] = new action_menu_link_secondary($url, $icon, $str, $attributes);
 
             $views = $this->get_views();
             if (count($views) > 1) {
                 $str = get_string('changeview', 'block_page_module');
-                $params = array('id' => $COURSE->id, 'instance' => $this->instance->id);
+                $params = ['id' => $COURSE->id, 'instance' => $this->instance->id];
                 $url = new moodle_url('/blocks/page_module/chooseview.php', $params);
-                $icon = new pix_icon('chooseview', $str, 'block_page_module', array('class' => 'iconsmall', 'title' => ''));
-                $attributes = array('class' => 'editing_changeview');
+                $icon = new pix_icon('chooseview', $str, 'block_page_module', ['class' => 'iconsmall', 'title' => '']);
+                $attributes = ['class' => 'editing_changeview'];
                 $bc->controls[] = new action_menu_link_secondary($url, $icon, $str, $attributes);
             }
         }
+
         return $bc;
     }
 
@@ -229,11 +248,11 @@ class block_page_module extends block_base {
      * @return object
      */
     public function get_content() {
-        global $USER, $PAGE, $COURSE, $CFG;
+        global $USER, $COURSE, $CFG;
 
         // This contains an alterated course renderer embedded.
-        $renderer = $PAGE->get_renderer('format_page');
-        $courserenderer = $PAGE->get_renderer('core', 'course');
+        $renderer = $this->page->get_renderer('format_page');
+        $debug = optional_param('debug', false, PARAM_BOOL);
 
         if ($this->content !== null) {
             return $this->content;
@@ -243,7 +262,7 @@ class block_page_module extends block_base {
         $this->content->text = '';
         $this->content->footer = '';
 
-        if (empty($this->instance) or !$this->config->cmid) {
+        if (empty($this->instance) || !$this->config->cmid) {
             return $this->content;
         }
 
@@ -273,16 +292,18 @@ class block_page_module extends block_base {
                     if (has_capability('moodle/course:manageactivities', $context)) {
                         $this->content->text = get_string('internalerrorlostmodule', 'block_page_module');
                     } else {
+                        $msg = "course module not found {$this->config->cmid} when getting page_module content ";
+                        debug_trace($msg, TRACE_DEBUG_FINE);
                         $this->content->text = null;
                     }
                     return $this->content;
                 }
             }
 
-            // Check module visibility.
-            // FIX Edunao/barchen-9.
-            // @see patch in course/format/page/__patch/lib/modinfolib.php
             /*
+             * Check module visibility.
+             * @see patch in course/format/page/__patch/lib/modinfolib.php
+             *
              * Dynamically set the operational section id in the module in the context
              * it is used in the page module instance.
              */
@@ -290,19 +311,19 @@ class block_page_module extends block_base {
             if ($pagesection) {
                 $mod->section = $pagesection->id;
             }
-            // FIX
 
-            $modulevisible = $this->instance->visible &&
-                                    $mod->uservisible &&
-                                            $this->has_user_access($USER->id, $this->cm) &&
-                                                    empty($mod->availableinfo);
+            $modulevisible = $this->instance->visible
+                    && $mod->uservisible
+                            && $this->has_user_access($USER->id, $this->cm)
+                                    && empty($mod->availableinfo);
 
             $modulevisiblestatic = $this->instance->visible && $mod->visible;
             $debug = optional_param('debug', false, PARAM_BOOL);
             if ($debug && $CFG->debug > DEBUG_NORMAL) {
                 echo '<pre>';
-                echo "Block instance is visible : {$this->instance->visible}\n";
-                echo "Module instance is visible : {$mod->uservisible}\n";
+                echo "Block instance {$this->instance->id} is visible : {$this->instance->visible}\n";
+                echo "Module instance {$this->cm->id} is visible (dynamic) : {$mod->uservisible}\n";
+                echo "Module instance {$this->cm->id} is visible (static) : {$modulevisiblestatic}\n";
                 echo "User has access (format page specific) : ".$this->has_user_access($USER->id, $this->cm)."\n";
                 echo "Availability restrictions : " . $mod->availableinfo."\n";
                 echo "<b>Resulting :</b> " . $modulevisible."\n";
@@ -317,37 +338,40 @@ class block_page_module extends block_base {
 
                 // Calling hook, set_instance, and passing $this by reference.
 
-                $displayoptions = array();
+                $displayoptions = [];
                 if (!empty($this->config->view)) {
-                    block_page_module_hook($this->config->view, 'set_instance', array(&$this));
+                    // This calls an alternate view of a CM.
+                    if ($debug && $CFG->debug = DEBUG_DEVELOPER) {
+                        echo "Getting view {$this->config->view} for {$this->title} ";
+                    }
+                    block_page_module_hook($this->config->view, 'set_instance', [&$this]);
                 } else {
-                    block_page_module_hook($this->module->name.'/default', 'set_instance', array(&$this));
+                    // This calls the "standard" view of a CM.
+                    if ($debug && $CFG->debug = DEBUG_DEVELOPER) {
+                        echo "Getting default view for {$this->title} ";
+                    }
+                    block_page_module_hook($this->module->name.'/default', 'set_instance', [&$this]);
                 }
 
                 // No hook could make the content, probably not pageable module, so use the standard cm rendering.
                 if (empty($this->content->text) && array_key_exists($this->config->cmid, $this->coursemodinfo->cms)) {
+                    if ($debug && $CFG->debug = DEBUG_DEVELOPER) {
+                        echo "Printing cm in standard way as last chance for {$this->title} ";
+                    }
                     $cm = $this->coursemodinfo->cms[$this->cm->id];
                     $this->content->text .= $renderer->print_cm($COURSE, $cm, $displayoptions);
-                }
-
-                if (!empty($this->content->text) && !$modulevisiblestatic) {
-                    // $this->content->text = '<div class="shadow">'.$this->content->text.'</div>';
                 }
 
                 // Important : next instruction REPLACES content. Not appending.
                 if (array_key_exists($this->cm->id, $this->coursemodinfo->cms)) {
                     $cm = $this->coursemodinfo->cms[$this->cm->id];
-                    $completion = new completion_info($COURSE);
-                    if ($completion->is_enabled($cm) && !is_null($USER)) {
-                        $comp = $courserenderer->course_section_cm_completion($COURSE, $completion, $cm);
-                    } else {
-                        $comp = '';
-                    }
-                    $this->content->text = '<div class="mod-completion" style="float:right">'.$comp.'</div>'.$this->content->text;
+                    // M4 : completion is handled inside cm template.
+                    $this->content->text = $this->content->text;
                 }
             }
         }
-        if (!$result and empty($this->content->text)) {
+
+        if (!$result && empty($this->content->text)) {
             $this->content->text = get_string('displayerror', 'block_page_module');
         }
         return $this->content;
@@ -359,11 +383,11 @@ class block_page_module extends block_base {
      * @return array
      */
     public function html_attributes() {
-        global $COURSE, $PAGE;
+        global $COURSE;
 
         $result = block_page_module_init($this->config->cmid);
 
-        if ($result !== false and is_array($result)) {
+        if ($result !== false && is_array($result)) {
 
             // Get all of the variables out.
             list($this->cm,
@@ -375,15 +399,18 @@ class block_page_module extends block_base {
         }
 
         $extraclasses = '';
-        if ($COURSE->format == 'page' && $PAGE->user_is_editing()) {
+        if ($COURSE->format == 'page' && $this->page->user_is_editing()) {
             $pageid = str_replace('page-', '', $this->instance->subpagepattern);
             if (!$pageid) {
-                // this is a "all pages block";
+                // This is a "all pages block".
                 $extraclasses = ' allpages';
             }
         }
 
-        return array('id' => 'inst'.$this->instance->id, 'class' => 'block block_'. $this->name().' mod-'.@$this->module->name.$extraclasses);
+        return [
+            'id' => 'inst'.$this->instance->id,
+            'class' => 'block block_'. $this->name().' mod-'.($this->module->name ?? '').$extraclasses,
+        ];
     }
 
     /**
@@ -402,6 +429,14 @@ class block_page_module extends block_base {
      **/
     public function instance_allow_config() {
         return true;
+    }
+
+    /**
+     * Page module represents activities and resources,
+     * use course module availability to hide.
+     */
+    public function instance_can_be_hidden() {
+        return false;
     }
 
     /**
@@ -426,7 +461,7 @@ class block_page_module extends block_base {
             $cm->id = $this->config->cmid;
         }
 
-        $hidden = $DB->get_field('block_page_module_access', 'hidden', array('userid' => $userid, 'pageitemid' => $cm->id));
+        $hidden = $DB->get_field('block_page_module_access', 'hidden', ['userid' => $userid, 'pageitemid' => $cm->id]);
         return !$hidden;
     }
 
@@ -439,7 +474,7 @@ class block_page_module extends block_base {
 
         $now = time();
         $select = ' revealtime > ? AND revealtime != 0 ';
-        if ($revealswitches = $DB->get_records_select('block_page_module_access', $select, array($now))) {
+        if ($revealswitches = $DB->get_records_select('block_page_module_access', $select, [$now])) {
             foreach ($revealswitches as $sw) {
                 $sw->revealtime = 0;
                 $sw->hidden = 0;
@@ -447,7 +482,7 @@ class block_page_module extends block_base {
             }
         }
         $select = ' hidetime > ? AND hidetime != 0 ';
-        if ($hideswitches = $DB->get_records_select('block_page_module_access', $select, array($now))) {
+        if ($hideswitches = $DB->get_records_select('block_page_module_access', $select, [$now])) {
             foreach ($hideswitches as $sw) {
                 $sw->hidetime = 0;
                 $sw->hidden = 1;
@@ -465,10 +500,10 @@ class block_page_module extends block_base {
     public function get_views() {
         global $DB, $CFG;
 
-        $viewlist = array('default' => get_string('linkview', 'block_page_module'));
+        $viewlist = ['default' => get_string('linkview', 'block_page_module')];
 
-        $moduleid = $DB->get_field('course_modules', 'module', array('id' => $this->config->cmid));
-        $modname = $DB->get_field('modules', 'name', array('id' => $moduleid));
+        $moduleid = $DB->get_field('course_modules', 'module', ['id' => $this->config->cmid]);
+        $modname = $DB->get_field('modules', 'name', ['id' => $moduleid]);
 
         if (file_exists($CFG->dirroot.'/course/format/page/plugins/'.$modname.'.php')) {
             $viewlist[$modname] = get_string('pluginname', $modname);

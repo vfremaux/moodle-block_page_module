@@ -15,11 +15,12 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package    block_page_module
- * @category   blocks
- * @subpackage backup-moodle2
- * @copyright  2003 onwards Eloy Lafuente (stronk7) {@link http://stronk7.com}
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * Restore task.
+ *
+ * @package     block_page_module
+ * @author      Valery Fremaux (valery@gmail.com)
+ * @copyright   2016 onwards Valery Fremaux (valery.fremaux@gmail.com)
+ * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL
  */
 defined('MOODLE_INTERNAL') || die();
 
@@ -29,35 +30,56 @@ require_once($CFG->dirroot.'/blocks/page_module/backup/moodle2/restore_page_modu
  * Specialised restore task for the page_module block
  * (has own DB structures to backup)
  *
- * TODO: Finish phpdocs
+ * phpcs:disable moodle.Commenting.ValidTags.Invalid
+ * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
  */
 class restore_page_module_block_task extends restore_block_task {
 
+    /**
+     * No settings.
+     */
     protected function define_my_settings() {
+        return [];
     }
 
+    /**
+     * Block page_module has one structure step.
+     */
     protected function define_my_steps() {
-        // Block page_module has one structure step.
         $this->add_step(new restore_page_module_block_structure_step('page_module_structure', 'page_module.xml'));
     }
 
+    /**
+     * No associated fileareas.
+     */
     public function get_fileareas() {
-        return array(); // No associated fileareas.
+        return [];
     }
 
+    /**
+     * No special handling of configdata.
+     */
     public function get_configdata_encoded_attributes() {
-        return array(); // No special handling of configdata.
+        return [];
     }
 
-    static public function define_decode_contents() {
-        return array();
+    /**
+     * No content decoding.
+     */
+    public static function define_decode_contents() {
+        return [];
     }
 
-    static public function define_decode_rules() {
-        return array();
+    /**
+     * No decoding rules.
+     */
+    public static function define_decode_rules() {
+        return [];
     }
 
-    // Each block will be responsible for his own remapping in is associated pageid.
+    /**
+     * Each block will be responsible for his own remapping in is associated pageid.
+     */
     public function after_restore() {
         global $DB;
 
@@ -83,14 +105,14 @@ class restore_page_module_block_task extends restore_block_task {
                 fpi.blockinstance = ?
         ";
 
-        if ($pageitem = $DB->get_record_sql($sql, array($courseid, $oldblockid))) {
+        if ($pageitem = $DB->get_record_sql($sql, [$courseid, $oldblockid])) {
             $pageitem->blockinstance = $blockid;
             if (@$pageitem->cmid) {
                 $pageitem->cmid = $this->get_mappingid('course_module', $pageitem->cmid);
             }
             $DB->update_record('format_page_items', $pageitem);
 
-            $bi = $DB->get_record('block_instances', array('id' => $blockid));
+            $bi = $DB->get_record('block_instances', ['id' => $blockid]);
 
             // Adjust the serialized configdata->cmid to the actualized course module.
             // Get the configdata.
@@ -109,7 +131,7 @@ class restore_page_module_block_task extends restore_block_task {
             $bi->subpagepattern = 'page-'.$newpageid;
             $DB->update_record('block_instances', $bi);
 
-            $params = array('blockinstanceid' => $blockid, 'contextid' => $bi->parentcontextid);
+            $params = ['blockinstanceid' => $blockid, 'contextid' => $bi->parentcontextid];
             if ($DB->get_field('block_positions', 'subpage', $params)) {
                 $DB->set_field('block_positions', 'subpage', 'page-'.$newpageid, $params);
             }
