@@ -15,13 +15,13 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package    block_page_module
- * @category   blocks
- * @subpackage backup-moodle2
- * @copyright  2003 onwards Eloy Lafuente (stronk7) {@link http://stronk7.com}
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * Back steps lobrary
+ *
+ * @package     block_page_module
+ * @author      Valery Fremaux (valery@gmail.com)
+ * @copyright   2016 onwards Valery Fremaux (valery.fremaux@gmail.com)
+ * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL
  */
-defined('MOODLE_INTERNAL') || die();
 
 /**
  * Define all the backup steps that wll be used by the backup_page_module_block_task
@@ -32,20 +32,23 @@ defined('MOODLE_INTERNAL') || die();
  */
 class backup_page_module_block_structure_step extends backup_block_structure_step {
 
+    /**
+     * Define backup structure
+     */
     protected function define_structure() {
         global $DB;
 
         // Get the block.
-        $block = $DB->get_record('block_instances', array('id' => $this->task->get_blockid()));
+        $block = $DB->get_record('block_instances', ['id' => $this->task->get_blockid()]);
 
         // Define each element separated.
 
-        $pagemodule = new backup_nested_element('pagemodule', array('id'), array('pageid', 'cmid', 'blockinstance'));
+        $pagemodule = new backup_nested_element('pagemodule', ['id'], ['pageid', 'cmid', 'blockinstance']);
 
         $grants = new backup_nested_element('grants');
 
-        $access = new backup_nested_element('access', array('id'), array(
-            'userid', 'pageitemid', 'hidden', 'revealtime', 'hidetime'));
+        $access = new backup_nested_element('access', ['id'], [
+            'userid', 'pageitemid', 'hidden', 'revealtime', 'hidetime']);
 
         // Build the tree.
 
@@ -54,9 +57,9 @@ class backup_page_module_block_structure_step extends backup_block_structure_ste
 
         // Define sources.
 
-        $instances = $DB->get_records('format_page_items', array('blockinstance' => $block->id));
+        $instances = $DB->get_records('format_page_items', ['blockinstance' => $block->id]);
         $pagemodule->set_source_array($instances);
-        $access->set_source_table('block_page_module_access', array('pageitemid' => backup::VAR_PARENTID));
+        $access->set_source_table('block_page_module_access', ['pageitemid' => backup::VAR_PARENTID]);
 
         // Annotations (none).
         $access->annotate_ids('user', 'userid');

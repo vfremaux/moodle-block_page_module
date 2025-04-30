@@ -15,24 +15,22 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * @package    block_page_module
- * @category   blocks
- * @author Mark Nielsen
- * @author Moodle 2 Valery Fremaux
- * @todo Could have external methods for caching cm, module, module instace records
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- *
  * This script allows user to choose a rendering view for the page module instance.
+ *
+ * @package    block_page_module
+ * @author Mark Nielsen, Valery Fremaux
+ * @copyright       2016 onwards Valery Fremaux (valery.fremaux@gmail.com)
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
 require('../../config.php');
 require_once($CFG->dirroot.'/blocks/page_module/chooseview_form.php');
 
 $id = required_param('id', PARAM_INT); // Course ID.
 $instanceid = required_param('instance', PARAM_INT); // Block instance ID.
 
-if (!$course = $DB->get_record('course', array('id' => "$id"))) {
-    print_error('invalidcourseid');
-}
+$course = $DB->get_record('course', ['id' => "$id"], '*', MUST_EXIST);
+
 $coursecontext = context_course::instance($course->id);
 
 // Security.
@@ -40,13 +38,11 @@ $coursecontext = context_course::instance($course->id);
 require_login($course);
 require_capability('moodle/course:manageactivities', $coursecontext);
 
-if (!$instance = $DB->get_record('block_instances', array('id' => "$instanceid"))) {
-    print_error('badblockinstance', 'block_page_module');
-}
+$instance = $DB->get_record('block_instances', ['id' => "$instanceid"], '*', MUST_EXIST);
 
 $theblock = block_instance('page_module', $instance);
 
-$url = new moodle_url('/blocks/page_module/chooseview.php', array('id' => $id, 'instance' => $instanceid));
+$url = new moodle_url('/blocks/page_module/chooseview.php', ['id' => $id, 'instance' => $instanceid]);
 $PAGE->set_url($url);
 $PAGE->set_context($coursecontext);
 $PAGE->navbar->add(get_string('pluginname', 'format_page'));
@@ -54,16 +50,16 @@ $PAGE->navbar->add(get_string('chooseview', 'block_page_module'));
 $PAGE->set_title($SITE->shortname);
 $PAGE->set_heading($SITE->shortname);
 
-$mform = new ChooseView_Form($url, array('theblock' => $theblock));
+$mform = new ChooseView_Form($url, ['theblock' => $theblock]);
 
 if ($mform->is_cancelled()) {
-    redirect(new moodle_url('/course/view.php', array('id' => $id)));
+    redirect(new moodle_url('/course/view.php', ['id' => $id]));
 }
 
 if ($data = $mform->get_data()) {
     $theblock->config->view = $data->chooseview;
     $theblock->instance_config_save($theblock->config);
-    redirect(new moodle_url('/course/view.php', array('id' => $id)));
+    redirect(new moodle_url('/course/view.php', ['id' => $id]));
 }
 
 echo $OUTPUT->header();

@@ -14,18 +14,29 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+/**
+ * Privacy provider.
+ *
+ * @package     block_page_module
+ * @author      Valery Fremaux (valery@gmail.com)
+ * @copyright   2016 onwards Valery Fremaux (valery.fremaux@gmail.com)
+ * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL
+ */
+
 namespace block_page_module\privacy;
 
-defined('MOODLE_INTERNAL') || die();
-
+/**
+ * Null provider.
+ */
 class provider implements \core_privacy\local\metadata\null_provider {
+
     /**
      * Get the language string identifier with the component's language
      * file to explain why this plugin stores no data.
      *
      * @return  string
      */
-    public static function get_reason() : string {
+    public static function get_reason(): string {
         return 'privacy:metadata';
     }
 }

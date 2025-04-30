@@ -18,7 +18,6 @@
  * Version details.
  *
  * @package     block_page_module
- * @category    blocks
  * @author      Valery Fremaux <valery.fremaux@gmail.com>
  * @copyright   2010 onwards Valery Fremaux (http://www.mylearningfactory.com)
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -26,12 +25,12 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2019091600;        // The current plugin version (Date: YYYYMMDDXX).
-$plugin->requires  = 2020060900;        // Requires this Moodle version.
+$plugin->version   = 2025011400;        // The current plugin version (Date: YYYYMMDDXX).
+$plugin->requires  = 2024100701;        // Requires this Moodle version.
 $plugin->component = 'block_page_module'; // Full name of the plugin (used for diagnostics).
-$plugin->release = '3.9.0 (Build 2019091600)';
+$plugin->release = '4.5.0 (Build 2019091603)';
 $plugin->maturity = MATURITY_STABLE;
-$plugin->supports = [38,39];
+$plugin->supported = [401, 405];
 
 // Non moodle attributes.
-$plugin->codeincrement = '3.9.0001';
+$plugin->codeincrement = '4.5.0002';

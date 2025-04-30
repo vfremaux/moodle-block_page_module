@@ -1,7 +1,7 @@
 
 .block_page_module {
-    background: transparent !important;
-    border: none !important;
+    background: transparent;
+    border: none;
     margin-bottom: 15px;
     margin-top: 15px;
 }
@@ -9,10 +9,10 @@
 /* Make everything dimmed */
 
 .block_page_module div.dimmed {
-    -moz-opacity: 0.4;
-    background-color: #f0f0f0 !important;
-    filter: alpha(opacity=40);
-    opacity: 0.4;
+    -moz-opacity: 0.5;
+    background-color: #f0f0f0;
+    filter: opacity(50%);
+    opacity: 0.5;
 }
 
 .block-page-module-view {
@@ -21,6 +21,12 @@
     border: 1px solid #e0e0e0;
     margin: 5px;
     padding: 10px;
+}
+
+.block_page_module.is-alternate-view .activity-information {
+    display: flex;
+    justify-content: flex-end;
+    padding-right: 1.6rem;
 }
 
 .block-page-module-emptyview {
@@ -64,8 +70,8 @@
 }
 
 .shadow > * {
-    -moz-opacity:0.5;
-    opacity:0.5;
+    -moz-opacity: 0.5;
+    opacity: 0.5;
 }
 
 /* fix some tool masking effect */
