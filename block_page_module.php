@@ -217,11 +217,13 @@ class block_page_module extends block_base {
             $bc->controls[] = new action_menu_link_secondary($url, $icon, $str, $attributes);
 
             $str = get_string('copymodule', 'block_page_module');
-            $params = ['id' => $COURSE->id,
-                            'sesskey' => sesskey(),
-                            'duplicate' => $this->config->cmid,
-                            'section' => $page->get_section(), // Carefull to that.
-                            'insertinpage' => $page->id];
+            $params = [
+                'id' => $COURSE->id,
+                'sesskey' => sesskey(),
+                'duplicate' => $this->config->cmid,
+                'section' => $page->get_section(), // Carefull to that.
+                'insertinpage' => $page->id,
+            ];
             $url = new moodle_url('/course/format/page/mod.php', $params);
             $icon = new pix_icon('t/copy', $str, 'moodle', ['class' => 'iconsmall', 'title' => '']);
             $attributes = ['class' => 'editing_edit'];
@@ -293,7 +295,7 @@ class block_page_module extends block_base {
                         $this->content->text = get_string('internalerrorlostmodule', 'block_page_module');
                     } else {
                         $msg = "course module not found {$this->config->cmid} when getting page_module content ";
-                        debug_trace($msg, TRACE_DEBUG_FINE);
+                        // debug_trace($msg, TRACE_DEBUG_FINE);
                         $this->content->text = null;
                     }
                     return $this->content;
@@ -312,13 +314,18 @@ class block_page_module extends block_base {
                 $mod->section = $pagesection->id;
             }
 
+            /*
             $modulevisible = $this->instance->visible
                     && $mod->uservisible
                             && $this->has_user_access($USER->id, $this->cm)
                                     && empty($mod->availableinfo);
+            */
+
+            $modulevisible = $this->instance->visible;
 
             $modulevisiblestatic = $this->instance->visible && $mod->visible;
             $debug = optional_param('debug', false, PARAM_BOOL);
+
             if ($debug && $CFG->debug > DEBUG_NORMAL) {
                 echo '<pre>';
                 echo "Block instance {$this->instance->id} is visible : {$this->instance->visible}\n";
@@ -332,42 +339,45 @@ class block_page_module extends block_base {
 
             $coursecontext = context_course::instance($this->course->id);
 
-            if ($modulevisible || has_capability('moodle/course:viewhiddenactivities', $coursecontext)) {
-                // Default: set title to instance name.
-                $this->title = format_string($this->moduleinstance->name);
+            if (!$modulevisiblestatic && !has_capability('moodle/course:viewhiddenactivities', $coursecontext)) {
+                $this->content->text = '';
+                return '';
+            }
 
-                // Calling hook, set_instance, and passing $this by reference.
+            // Default: set title to instance name.
+            $this->title = format_string($this->moduleinstance->name);
 
-                $displayoptions = [];
-                if (!empty($this->config->view)) {
-                    // This calls an alternate view of a CM.
-                    if ($debug && $CFG->debug = DEBUG_DEVELOPER) {
-                        echo "Getting view {$this->config->view} for {$this->title} ";
-                    }
-                    block_page_module_hook($this->config->view, 'set_instance', [&$this]);
-                } else {
-                    // This calls the "standard" view of a CM.
-                    if ($debug && $CFG->debug = DEBUG_DEVELOPER) {
-                        echo "Getting default view for {$this->title} ";
-                    }
-                    block_page_module_hook($this->module->name.'/default', 'set_instance', [&$this]);
+            // Calling hook, set_instance, and passing $this by reference.
+
+            $displayoptions = [];
+            if (!empty($this->config->view)) {
+                // This calls an alternate view of a CM.
+                if ($debug && $CFG->debug = DEBUG_DEVELOPER) {
+                    echo "Getting view {$this->config->view} for {$this->title} ";
                 }
-
-                // No hook could make the content, probably not pageable module, so use the standard cm rendering.
-                if (empty($this->content->text) && array_key_exists($this->config->cmid, $this->coursemodinfo->cms)) {
-                    if ($debug && $CFG->debug = DEBUG_DEVELOPER) {
-                        echo "Printing cm in standard way as last chance for {$this->title} ";
-                    }
-                    $cm = $this->coursemodinfo->cms[$this->cm->id];
-                    $this->content->text .= $renderer->print_cm($COURSE, $cm, $displayoptions);
+                block_page_module_hook($this->config->view, 'set_instance', [&$this]);
+            } else {
+                // This calls the "standard" view of a CM.
+                if ($debug && $CFG->debug = DEBUG_DEVELOPER) {
+                    echo "Getting default view for {$this->title} ";
                 }
+                block_page_module_hook($this->module->name.'/default', 'set_instance', [&$this]);
+            }
 
-                // Important : next instruction REPLACES content. Not appending.
-                if (array_key_exists($this->cm->id, $this->coursemodinfo->cms)) {
-                    $cm = $this->coursemodinfo->cms[$this->cm->id];
-                    // M4 : completion is handled inside cm template.
-                    $this->content->text = $this->content->text;
+            // No hook could make the content, probably not pageable module, so use the standard cm rendering.
+            if (empty($this->content->text) && array_key_exists($this->config->cmid, $this->coursemodinfo->cms)) {
+                if ($debug && $CFG->debug = DEBUG_DEVELOPER) {
+                    echo "Printing cm in standard way as last chance for {$this->title} ";
                 }
+                $cm = $this->coursemodinfo->cms[$this->cm->id];
+                $this->content->text .= $renderer->print_cm($COURSE, $cm, $displayoptions);
+            }
+
+            // Important : next instruction REPLACES content. Not appending.
+            if (array_key_exists($this->cm->id, $this->coursemodinfo->cms)) {
+                $cm = $this->coursemodinfo->cms[$this->cm->id];
+                // M4 : completion is handled inside cm template.
+                $this->content->text = $this->content->text;
             }
         }
 

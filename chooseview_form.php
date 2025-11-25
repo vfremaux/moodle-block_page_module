@@ -17,10 +17,9 @@
 /**
  * Form to choose view
  *
- * @package    block_page_module
- * @author Mark Nielsen, Valery Fremaux
- * @copyright       2016 onwards Valery Fremaux (valery.fremaux@gmail.com)
- * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package block_page_module
+ * @author Valery Fremaux (valery@club-internet.fr)
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL
  */
 defined('MOODLE_INTERNAL') || die();
 

@@ -16,13 +16,12 @@
 
 /**
  * This script allows user to choose a rendering view for the page module instance.
- *
  * @package    block_page_module
- * @author Mark Nielsen, Valery Fremaux
- * @copyright       2016 onwards Valery Fremaux (valery.fremaux@gmail.com)
- * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @author Mark Nielsen
+ * @author Moodle 2 Valery Fremaux
+ * @todo Could have external methods for caching cm, module, module instace records
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
 require('../../config.php');
 require_once($CFG->dirroot.'/blocks/page_module/chooseview_form.php');
 

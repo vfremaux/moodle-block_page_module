@@ -100,44 +100,50 @@ class restore_page_module_block_task extends restore_block_task {
                 {format_page_items} fpi,
                 {format_page} f
             WHERE
-                f.courseid = ? AND
                 fpi.pageid = f.id AND
+                f.courseid = ? AND
                 fpi.blockinstance = ?
         ";
 
         if ($pageitem = $DB->get_record_sql($sql, [$courseid, $oldblockid])) {
             $pageitem->blockinstance = $blockid;
-            if (@$pageitem->cmid) {
-                $pageitem->cmid = $this->get_mappingid('course_module', $pageitem->cmid);
+            $oldcmid = $pageitem->cmid;
+            if ($oldcmid != 0) {
+                // This is a core fault : the backup mapping uses "course_module" and NOT "course_modules" as table reference.
+                $newcmid = $this->get_mappingid('course_module', $oldcmid);
+                $pageitem->cmid = $newcmid;
+                debug_trace("CourseModule remapped pageitem ".json_encode($pageitem)." cmid from {$oldcmid} to {$newcmid} ", TRACE_DEBUG);
+                $DB->update_record('format_page_items', $pageitem);
+
+                $bi = $DB->get_record('block_instances', ['id' => $blockid]);
+
+                // Adjust the serialized configdata->cmid to the actualized course module.
+                // Get the configdata.
+
+                // Extract configdata.
+                $config = unserialize(base64_decode($bi->configdata));
+                // Set array of used rss feeds.
+                // TODO check this, not sure course modules are stored in backup mapping tables as this.
+                $config->cmid = $newcmid;
+                // Serialize back the configdata.
+                $bi->configdata = base64_encode(serialize($config));
+
+                // Remap the subpage.
+                $oldpageid = str_replace('page-', '', $bi->subpagepattern);
+                $newpageid = $this->get_mappingid('format_page', $oldpageid);
+                $bi->subpagepattern = 'page-'.$newpageid;
+                $DB->update_record('block_instances', $bi);
+                debug_trace("CourseModule remapped block in new page {$newpageid} ", TRACE_DEBUG);
             }
-            $DB->update_record('format_page_items', $pageitem);
-
-            $bi = $DB->get_record('block_instances', ['id' => $blockid]);
-
-            // Adjust the serialized configdata->cmid to the actualized course module.
-            // Get the configdata.
-
-            // Extract configdata.
-            $config = unserialize(base64_decode($bi->configdata));
-            // Set array of used rss feeds.
-            // TODO check this, not sure course modules are stored in backup mapping tables as this.
-            $config->cmid = $this->get_mappingid('course_module', $config->cmid);
-            // Serialize back the configdata.
-            $bi->configdata = base64_encode(serialize($config));
-
-            // Remap the subpage.
-            $oldpageid = str_replace('page-', '', $bi->subpagepattern);
-            $newpageid = $this->get_mappingid('format_page', $oldpageid);
-            $bi->subpagepattern = 'page-'.$newpageid;
-            $DB->update_record('block_instances', $bi);
 
             $params = ['blockinstanceid' => $blockid, 'contextid' => $bi->parentcontextid];
             if ($DB->get_field('block_positions', 'subpage', $params)) {
                 $DB->set_field('block_positions', 'subpage', 'page-'.$newpageid, $params);
+                debug_trace("CourseModule remapped block position in new page {$newpageid} ", TRACE_DEBUG);
             }
 
         } else {
-            $this->get_logger()->process("Failed in finding pageitem for block $oldblockid. ", backup::LOG_ERROR);
+            $this->get_logger()->process("Failed in finding pageitem for block (old) $oldblockid (new: $blockid). ", backup::LOG_ERROR);
         }
     }
 
@@ -157,7 +163,8 @@ class restore_page_module_block_task extends restore_block_task {
      * Return the complete mapping from the given itemname, itemid
      */
     public function get_mapping($itemname, $oldid) {
-        return restore_dbops::get_backup_ids_record($this->plan->get_restoreid(), $itemname, $oldid);
+        $mapping = restore_dbops::get_backup_ids_record($this->plan->get_restoreid(), $itemname, $oldid);
+        return $mapping;
     }
 }
 
