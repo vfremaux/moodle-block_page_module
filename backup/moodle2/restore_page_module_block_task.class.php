@@ -107,8 +107,10 @@ class restore_page_module_block_task extends restore_block_task {
 
         if ($pageitem = $DB->get_record_sql($sql, [$courseid, $oldblockid])) {
             $pageitem->blockinstance = $blockid;
-            if (@$pageitem->cmid) {
+            if ($pageitem->cmid ?? 0) {
                 $pageitem->cmid = $this->get_mappingid('course_module', $pageitem->cmid);
+            } else {
+                $pageitem->cmid = null; // marks a failed remapping.
             }
             $DB->update_record('format_page_items', $pageitem);
 
@@ -126,15 +128,41 @@ class restore_page_module_block_task extends restore_block_task {
             $bi->configdata = base64_encode(serialize($config));
 
             // Remap the subpage.
-            $oldpageid = str_replace('page-', '', $bi->subpagepattern);
-            $newpageid = $this->get_mappingid('format_page', $oldpageid);
-            $bi->subpagepattern = 'page-'.$newpageid;
-            $DB->update_record('block_instances', $bi);
+            if (strpos($bi->subpagepattern, 'page-') === 0) {
+                $oldpageid = str_replace('page-', '', $bi->subpagepattern);
+                $newpageid = $this->get_mappingid('format_page', $oldpageid);
+                $bi->subpagepattern = 'page-'.$newpageid;
+                $DB->update_record('block_instances', $bi);
+            } else if (strpos($bi->subpagepattern, 'allpages-') === 0) {
+                $oldpageid = str_replace('allpages-', '', $bi->subpagepattern);
+                $newpageid = $this->get_mappingid('format_page', $oldpageid);
+                $bi->subpagepattern = 'allpages-'.$newpageid;
+                $DB->update_record('block_instances', $bi);
+            } else {
+                // Old all pages case. Do not let NULL subpagepatterns in the DB.
+                $newpageid = $this->get_mappingid('format_page', $oldpageid);
+                $bi->subpagepattern = 'allpages-'.$pageitem->pageid;
+                $DB->update_record('block_instances', $bi);
+            }
 
+            // Get old positions and update default region wich is the only positionning
+            // reference.
+            $params = ['blockinstanceid' => $blockid];
+            $positions = $DB->get_records('block_positions', $params);
+            // should be essentially be one...
+            if ($positions) {
+                $position = array_shift($positions);
+                $DB->set_field('block_instances', 'defaultregion', $position->region, ['id' => $blockid]);
+            }
+
+            // Remove all positions for paged blocks.
+            $DB->delete_records('block_positions', ['blockinstanceid' => $blockid]);
+            /*
             $params = ['blockinstanceid' => $blockid, 'contextid' => $bi->parentcontextid];
             if ($DB->get_field('block_positions', 'subpage', $params)) {
                 $DB->set_field('block_positions', 'subpage', 'page-'.$newpageid, $params);
             }
+            */
 
         } else {
             $this->get_logger()->process("Failed in finding pageitem for block $oldblockid. ", backup::LOG_ERROR);
