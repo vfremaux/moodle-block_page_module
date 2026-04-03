@@ -30,6 +30,11 @@ $label = get_string('showactivitynamedefault', 'block_page_module');
 $desc = get_string('configshowactivityname', 'block_page_module');
 $settings->add(new admin_setting_configcheckbox($key, $label, $desc, false));
 
+$key = 'block_page_module/defaultviewstandard';
+$label = get_string('defaultviewstandard', 'block_page_module');
+$desc = get_string('configdefaultviewstandard', 'block_page_module');
+$settings->add(new admin_setting_configcheckbox($key, $label, $desc, true));
+
 $key = 'block_page_module/pageindividualisationfeature';
 $label = get_string('pageindividualisationfeature', 'block_page_module');
 $desc = get_string('configpageindividualisationfeature', 'block_page_module');

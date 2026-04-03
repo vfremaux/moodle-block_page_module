@@ -25,11 +25,14 @@
 
 $string['page_module:addinstance'] = 'Peut ajouter une instance';
 
+$string['addtoindividualisation'] = 'Sélectionner pour l\'individualisation';
 $string['blockname'] = 'Module de Page';
 $string['displayerror'] = 'Une erreur est survenue à l\'affichage de ce module.';
 $string['displaymodule'] = 'Montrer le module';
 $string['editmodule'] = 'Réglages de l\'activité';
 $string['copymodule'] = 'Dupliquer l\'activité';
+$string['pluginname'] = 'Module de Page';
+$string['pluginname_help'] = 'Utilisé par le format page (ne peut être utilisé directement).';
 $string['linkview'] = 'Vue standard (lien)';
 $string['chooseview'] = 'Choisir l\'apparence de l\'activité';
 $string['changeview'] = 'Changer l\'apparence de l\'activité';
@@ -37,9 +40,11 @@ $string['emptyview'] = 'Cette vue semble vide, mais dépend probablement de cert
 $string['defaultpageview'] = 'Widget de page par défaut';
 $string['pageindividualisationfeature'] = 'Individualisation';
 $string['configpageindividualisationfeature'] = 'Cocher cette case active les fonctions d\'individualisation du format \"page\". Ces fonctions permettent d\'activer ou de désactiver individuellement les activités pour chaque utilisateur et permet aussi d\'en planifier l\'activation dans le temps';
+$string['defaultviewstandard'] = 'Utiliser par défaut la vue standard';
+$string['configdefaultviewstandard'] = 'Si activé, toute nouvelle activité sera affichée avec l\'apparence moodle standard (lien) lors de son ajout dans le cours.';
 $string['individualizewithtimes'] = 'Programmation dans le temps des modules';
 $string['configshowactivitynamedefault'] = 'Le nom de l\'activité doit elle remplace le nom du bloc module de page (défaut) ?';
-$string['configindividualizewithtimes'] = 'Cocher cette case active les temporisations de l\'individualisation et permet d\'activer et de désactiver les modules dans le temps';
+$string['configindividualizewithtimes'] = 'Cocher cette case active les temporisations de l\'individualisation et permet d\'activer et de désactiver les activités additionnelles dans le temps';
 $string['showactivityname'] = 'Afficher le nom de l\'activité';
 $string['showactivitynamedefault'] = 'Afficher le nom de l\'activité (défaut)';
 $string['configshowactivityname'] = 'Si activé sur une instance, le nom de l\'activité sera affiché comme le titre du bloc';

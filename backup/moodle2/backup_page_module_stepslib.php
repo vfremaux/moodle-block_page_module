@@ -48,7 +48,7 @@ class backup_page_module_block_structure_step extends backup_block_structure_ste
         $grants = new backup_nested_element('grants');
 
         $access = new backup_nested_element('access', ['id'], [
-            'userid', 'pageitemid', 'hidden', 'revealtime', 'hidetime']);
+            'userid', 'cmid', 'hidden', 'revealtime', 'hidetime']);
 
         // Build the tree.
 
@@ -59,7 +59,7 @@ class backup_page_module_block_structure_step extends backup_block_structure_ste
 
         $instances = $DB->get_records('format_page_items', ['blockinstance' => $block->id]);
         $pagemodule->set_source_array($instances);
-        $access->set_source_table('block_page_module_access', ['pageitemid' => backup::VAR_PARENTID]);
+        $access->set_source_table('block_page_module_access', ['cmid' => backup::VAR_PARENTID]);
 
         // Annotations (none).
         $access->annotate_ids('user', 'userid');

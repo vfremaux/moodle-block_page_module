@@ -17,10 +17,10 @@
 /**
  * Page Module block
  *
- * @package    block_page_module
- * @author Mark Nielsen, Valery Fremaux
- * @copyright       2016 onwards Valery Fremaux (valery.fremaux@gmail.com)
- * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package     block_page_module
+ * @author      Mark Nielsen, Valery Fremaux
+ * @copyright   2016 onwards Valery Fremaux (valery.fremaux@gmail.com)
+ * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  *
  * @todo Could have external methods for caching cm, module, module instace records
  * Warning: $this->instance->id is actually a
@@ -156,7 +156,7 @@ class block_page_module extends block_base {
         $debug = optional_param('debug', '', PARAM_INT);
         if (empty($this->cm)) {
             if ($debug) {
-                debug_trace("Lost module. empty CM from id [$this->config->cmid} ", TRACE_DEBUG);
+                block_page_module_debug_trace("Lost module. empty CM from id [$this->config->cmid} ", TRACE_DEBUG);
                 echo "Lost module. empty CM from id [$this->config->cmid} ";
             }
             $SESSION->mayneedpagesectionfix = $COURSE->id;
@@ -168,7 +168,7 @@ class block_page_module extends block_base {
 
         if (empty($bc)) {
             if ($debug) {
-                debug_trace("Lost module. empty \$bc ", TRACE_DEBUG_FINE);
+                block_page_module_debug_trace("Lost module. empty \$bc ", TRACE_DEBUG_FINE);
                 echo "Lost module. empty \$bc ";
             }
             $SESSION->mayneedpagesectionfix = $COURSE->id;
@@ -293,7 +293,7 @@ class block_page_module extends block_base {
                         $this->content->text = get_string('internalerrorlostmodule', 'block_page_module');
                     } else {
                         $msg = "course module not found {$this->config->cmid} when getting page_module content ";
-                        debug_trace($msg, TRACE_DEBUG_FINE);
+                        block_page_module_debug_trace($msg, BLOCK_PAGE_MODULE_TRACE_DEBUG_FINE);
                         $this->content->text = null;
                     }
                     return $this->content;
@@ -332,7 +332,8 @@ class block_page_module extends block_base {
 
             $coursecontext = context_course::instance($this->course->id);
 
-            if ($modulevisible || has_capability('moodle/course:viewhiddenactivities', $coursecontext)) {
+            // Visible modules, but not accessible should remain visible.
+            if ($modulevisiblestatic || has_capability('moodle/course:viewhiddenactivities', $coursecontext)) {
                 // Default: set title to instance name.
                 $this->title = format_string($this->moduleinstance->name);
 
@@ -461,7 +462,7 @@ class block_page_module extends block_base {
             $cm->id = $this->config->cmid;
         }
 
-        $hidden = $DB->get_field('block_page_module_access', 'hidden', ['userid' => $userid, 'pageitemid' => $cm->id]);
+        $hidden = $DB->get_field('block_page_module_access', 'hidden', ['userid' => $userid, 'cmid' => $cm->id]);
         return !$hidden;
     }
 

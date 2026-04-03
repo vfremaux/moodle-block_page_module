@@ -29,10 +29,14 @@ $string['page_module:addinstance'] = 'Can add an instance';
 // Privacy.
 $string['privacy:metadata'] = 'The Page Module block does not store any personal data about any user.';
 
+$string['addtoindividualisation'] = 'Add to individualisation board';
 $string['blockname'] = 'Page module';
 $string['pluginname'] = 'Page module';
+$string['pluginname_help'] = 'A special block used by page format and cannot be directly used in courses.';
 $string['displayerror'] = 'An error occured in displaying this module.';
 $string['displaymodule'] = 'Display module';
+$string['defaultviewstandard'] = 'Use standard default view';
+$string['configdefaultviewstandard'] = 'If checked, new activities will be added in course using the standard moodle course module apparence (link).';
 $string['editmodule'] = 'Edit module settings';
 $string['copymodule'] = 'Duplicate module';
 $string['linkview'] = 'Default view (link)';

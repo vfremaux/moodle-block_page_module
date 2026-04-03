@@ -40,5 +40,11 @@ class block_page_module_edit_form extends block_edit_form {
         $label = get_string('showactivityname', 'block_page_module');
         $mform->addElement('checkbox', 'config_showactivityname', '', $label);
         $mform->setDefault('config_showactivityname', $config->showactivityname ?? false);
+
+        if ($config->pageindividualisationfeature) {
+            $label = get_string('addtoindividualisation', 'block_page_module');
+            $mform->addElement('checkbox', 'config_addtoindividualisation', '', $label);
+            $mform->setDefault('config_addtoindividualisation', $config->addtoindividualisation ?? false);
+        }
     }
 }

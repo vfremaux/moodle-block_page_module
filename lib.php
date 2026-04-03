@@ -25,6 +25,12 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+define('BLOCK_PAGE_MODULE_TRACE_ERRORS', 1); // Errors should be always traced when trace is on.
+define('BLOCK_PAGE_MODULE_TRACE_NOTICE', 3); // Notices are important notices in normal execution.
+define('BLOCK_PAGE_MODULE_TRACE_DEBUG', 5); // Debug are debug time notices that should be burried in debug_fine level when debug is ok.
+define('BLOCK_PAGE_MODULE_TRACE_DATA', 8); // Data level is when requiring to see data structures content.
+define('BLOCK_PAGE_MODULE_TRACE_DEBUG_FINE', 10); // Debug fine are control points we want to keep when code is refactored and debug needs to be reactivated.
+
 use format_page\course_page;
 
 /*
@@ -243,8 +249,21 @@ function block_page_module_hook($moduleview, $method, $args = []) {
  * This function allows the tool_dbcleaner to register integrity checks
  */
 function block_page_module_dbcleaner_add_keys() {
-    $keys = [['block_page_module_access', 'pageitemid', 'format_page_items', 'id', ''],
+    $keys = [['block_page_module_access', 'cmid', 'format_page_items', 'id', ''],
                   ['block_page_module_access', 'userid', 'user', 'id', '']];
 
     return $keys;
+}
+
+/**
+ * A wrapper to APL debug. Do not use trace constants here because they may be not installed.
+ * @param string $msg
+ * @param int $level
+ * @param string $label
+ * @param int $backtracelevel
+ */
+function block_page_module_debug_trace($msg, $level = BLOCK_PAGE_MODULE_TRACE_NOTICE, $label = '', $backtracelevel = 1) {
+    if (function_exists('debug_trace')) {
+        debug_trace($msg, $level, $label, $backtracelevel + 1);
+    }
 }

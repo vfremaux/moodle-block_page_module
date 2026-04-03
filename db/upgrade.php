@@ -67,5 +67,20 @@ function xmldb_block_page_module_upgrade($oldversion = 0) {
         upgrade_block_savepoint(true, 2016100500, 'page_module');
     }
 
+    if ($oldversion < 2025120100) {
+
+        // Define table block_page_module_access to be renamed to block_page_module_access.
+        $table = new xmldb_table('block_page_module_access');
+
+        $field = new xmldb_field('pageitemid');
+        $field->set_attributes(XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, '0');
+        if ($dbman->field_exists($table, $field)) {
+            $dbman->rename_field($table, $field, 'cmid');
+        }
+
+        // Page_module savepoint reached.
+        upgrade_block_savepoint(true, 2025120100, 'page_module');
+    }
+
     return $result;
 }

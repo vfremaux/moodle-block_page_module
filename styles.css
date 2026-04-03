@@ -15,6 +15,11 @@
     opacity: 0.5;
 }
 
+/* cleans out vertical move icon on view chooser */
+#page-blocks-page_module-chooseview .fa-arrows-up-down {
+    display: none;
+}
+
 .block-page-module-view {
     background-color: #f0f0f0;
     border-radius: 8px;

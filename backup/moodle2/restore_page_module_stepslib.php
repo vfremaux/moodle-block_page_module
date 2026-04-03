@@ -65,7 +65,12 @@ class restore_page_module_block_structure_step extends restore_structure_step {
 
         $data->course = $this->task->get_courseid();
         $data->userid = $this->get_mappingid('user', $data->userid);
-        $data->pageitemid = $this->get_mappingid('course_modules', $data->cmid);
+        if (empty($data->cmid) && !empty($data->pageitemid)) {
+            // Restore from older models.
+            $data->cmid = $data->pageitemid;
+            unset($data->pageitemid);
+        }
+        $data->cmid = $this->get_mappingid('course_modules', $data->cmid);
         $data->revealtime = $this->apply_date_offset($data->revealtime);
         $data->hidetime = $this->apply_date_offset($data->hidetime);
 
