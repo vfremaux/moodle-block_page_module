@@ -33,4 +33,4 @@ $plugin->maturity = MATURITY_STABLE;
 $plugin->supported = [401, 405];
 
 // Non moodle attributes.
-$plugin->codeincrement = '4.5.0003';
+$plugin->codeincrement = '4.5.0004';

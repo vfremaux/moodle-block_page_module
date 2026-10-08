@@ -197,13 +197,15 @@ function block_page_module_get_instance($name, $id) {
  *
  * Locations where the hook can be located:
  *    mod/modname/pageitem.php
+ *    mod/modname/pageitem{$view}.php // View alternative.
  *    course/format/page/plugins/pageitem.modname.php
+ *    course/format/page/plugins/pageitem{$view}.modname.php // View alternative.
  *
  * If above fail, will call default method in course/format/page/plugins/pageitem.php
  *
- * @param string $module Module name to call the hook for
+ * @param string $moduleview Module view to route to. Views are alternate ways of displaying the module.
  * @param string $method Function that will be called (A prefix will be added)
- * @param mixed $args This will be passed to the hook function
+ * @param mixed $args This will be passed to the hook function, as an array containing the block reference.
  * @return mixed
  */
 function block_page_module_hook($moduleview, $method, $args = []) {
@@ -215,6 +217,10 @@ function block_page_module_hook($moduleview, $method, $args = []) {
         $args = [$args];
     }
 
+    /*
+     * Moduleview can be a simple modulename, routing to default view.
+     * Default view is a pageitem_default.php file residing in the view locations.
+     */
     if (strpos($moduleview, '/') === false) {
         $module = $moduleview;
         $view = '';
@@ -228,7 +234,12 @@ function block_page_module_hook($moduleview, $method, $args = []) {
         $view = '';
     }
 
-    // Path and function mappings.
+    /*
+     * Path and function mappings.
+     * Will usually search first in plugin install directory, then try to
+     * get a default format_page implementation in page format (f.e. for moodle core modules
+     * that do not know anything about paged format).
+     */
     $paths = [$CFG->dirroot."/mod/{$module}/pageitem{$view}.php" => "{$module}{$view}_$method",
                    $CFG->dirroot."/course/format/page/plugins/{$module}{$view}.php" => "{$module}{$view}_$method"];
 

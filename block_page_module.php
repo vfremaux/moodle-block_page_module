@@ -248,11 +248,7 @@ class block_page_module extends block_base {
      * @return object
      */
     public function get_content() {
-        global $USER, $COURSE, $CFG;
-
-        // This contains an alterated course renderer embedded.
-        $renderer = $this->page->get_renderer('format_page');
-        $debug = optional_param('debug', false, PARAM_BOOL);
+        global $USER, $COURSE, $CFG, $OUTPUT;
 
         if ($this->content !== null) {
             return $this->content;
@@ -261,6 +257,18 @@ class block_page_module extends block_base {
         $this->content = new stdClass;
         $this->content->text = '';
         $this->content->footer = '';
+
+        /*
+         * The format_page renderer can only be built in the context of a format_page course page.
+         * The block may be asked for its content in other contexts (site level pages, reports, or courses
+         * using another format), where it must stay silent instead of making the whole page fail.
+         */
+        if ($COURSE->format != 'page' || !course_page::get_current_page($COURSE->id)) {
+            return $this->content;
+        }
+
+        // This contains an alterated course renderer embedded.
+        $renderer = $this->page->get_renderer('format_page');
 
         if (empty($this->instance) || !$this->config->cmid) {
             return $this->content;
@@ -316,24 +324,26 @@ class block_page_module extends block_base {
                     && $mod->uservisible
                             && $this->has_user_access($USER->id, $this->cm)
                                     && empty($mod->availableinfo);
+            $coursecontext = context_course::instance($this->course->id);
+            $canseeinvisible = has_capability('moodle/course:viewhiddenactivities', $coursecontext);
 
-            $modulevisiblestatic = $this->instance->visible && $mod->visible;
-            $debug = optional_param('debug', false, PARAM_BOOL);
-            if ($debug && $CFG->debug > DEBUG_NORMAL) {
+            $modulevisiblestatic = $this->instance->visible && $mod->visible && empty($mod->availableinfo);
+            $debug = optional_param('pagedebug', false, PARAM_BOOL);
+            if ($debug && ($CFG->debug >= DEBUG_NORMAL)) {
                 echo '<pre>';
                 echo "Block instance {$this->instance->id} is visible : {$this->instance->visible}\n";
+                echo "Module name : {$mod->modname}\n";
                 echo "Module instance {$this->cm->id} is visible (dynamic) : {$mod->uservisible}\n";
                 echo "Module instance {$this->cm->id} is visible (static) : {$modulevisiblestatic}\n";
+                echo "Can see hidden {$this->course->id} : {$canseeinvisible}\n";
                 echo "User has access (format page specific) : ".$this->has_user_access($USER->id, $this->cm)."\n";
                 echo "Availability restrictions : " . $mod->availableinfo."\n";
                 echo "<b>Resulting :</b> " . $modulevisible."\n";
                 echo '</pre>';
             }
 
-            $coursecontext = context_course::instance($this->course->id);
-
-            // Visible modules, but not accessible should remain visible.
-            if ($modulevisiblestatic || has_capability('moodle/course:viewhiddenactivities', $coursecontext)) {
+            // Visible modules, but not accessible should be .
+            if ($modulevisible || $canseeinvisible) {
                 // Default: set title to instance name.
                 $this->title = format_string($this->moduleinstance->name);
 
@@ -342,34 +352,52 @@ class block_page_module extends block_base {
                 $displayoptions = [];
                 if (!empty($this->config->view)) {
                     // This calls an alternate view of a CM.
-                    if ($debug && $CFG->debug = DEBUG_DEVELOPER) {
+                    if ($debug && ($CFG->debug == DEBUG_DEVELOPER)) {
                         echo "Getting view {$this->config->view} for {$this->title} ";
                     }
                     block_page_module_hook($this->config->view, 'set_instance', [&$this]);
                 } else {
                     // This calls the "standard" view of a CM.
-                    if ($debug && $CFG->debug = DEBUG_DEVELOPER) {
-                        echo "Getting default view for {$this->title} ";
+                    if ($debug && ($CFG->debug == DEBUG_DEVELOPER)) {
+                        echo "Debug: Getting default view for {$this->title} ";
                     }
                     block_page_module_hook($this->module->name.'/default', 'set_instance', [&$this]);
                 }
 
                 // No hook could make the content, probably not pageable module, so use the standard cm rendering.
                 if (empty($this->content->text) && array_key_exists($this->config->cmid, $this->coursemodinfo->cms)) {
-                    if ($debug && $CFG->debug = DEBUG_DEVELOPER) {
-                        echo "Printing cm in standard way as last chance for {$this->title} ";
+                    if ($debug && ($CFG->debug == DEBUG_DEVELOPER)) {
+                        echo "Debug: Printing cm in standard way as last chance for {$this->title} ";
                     }
                     $cm = $this->coursemodinfo->cms[$this->cm->id];
                     $this->content->text .= $renderer->print_cm($COURSE, $cm, $displayoptions);
                 }
 
                 // Important : next instruction REPLACES content. Not appending.
+                // Might be totally useless.
+                // @todo rexamine and delete code.
                 if (array_key_exists($this->cm->id, $this->coursemodinfo->cms)) {
                     $cm = $this->coursemodinfo->cms[$this->cm->id];
                     // M4 : completion is handled inside cm template.
                     $this->content->text = $this->content->text;
                 }
             }
+
+            if (!empty($mod->availableinfo)) {
+                $availabilitytext = '<div class="activity-availability availabilityinfo isrestricted isfullinfo">';
+                $availabilitytext .= '<i class="icon fa fa-lock fa-fw " aria-hidden="true"></i>';
+                if ($mod->availableinfo instanceof \core_availability_multiple_messages) {
+                    $availabilityinfo = new core_availability\output\availability_info($mod->availableinfo);
+                    $availabilitytext .= $OUTPUT->render($availabilityinfo).'</div>';
+                } else {
+                    $availabilitytext .= $mod->availableinfo.'</div>';
+                }
+                $this->content->text = $availabilitytext.$this->content->text;
+            }
+        }
+
+        if (!$this->cm->visible) {
+            $this->content->text = '<div class="dimmed">'.$this->content->text.'</div>';
         }
 
         if (!$result && empty($this->content->text)) {

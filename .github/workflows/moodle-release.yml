@@ -1,0 +1,26 @@
+name: Release Plugin version to Moodle Marketplace
+
+# Releases only a new v* tag, created by syncgit2, once "Moodle Plugin CI" succeeded on that tag.
+# Branch pushes (syncworking2 on *_WORKING, syncgit2 on *_STABLE) never release.
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to be released (e.g. v4.5.0012)'
+        required: true
+  workflow_run:
+    workflows: ["Moodle Plugin CI"]
+    types: [completed]
+
+jobs:
+  release-to-marketplace:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push' &&
+       startsWith(github.event.workflow_run.head_branch, 'v'))
+    uses: moodlehq/moodle-plugin-release/.github/workflows/moodle-release.yml@main
+    with:
+      tag: ${{ inputs.tag || github.event.workflow_run.head_branch }}
+    secrets:
+      MOODLE_MARKETPLACE_TOKEN: ${{ secrets.MOODLE_MARKETPLACE_TOKEN }}
