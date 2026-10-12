@@ -54,14 +54,37 @@ class block_page_module extends block_base {
     /** @var Hide block header or not */
     public $hideheader = true;
 
+    /*
+     * The following attributes are the public context given to the pageitem hooks
+     * (mod/<name>/pageitem*.php, format/page/plugins/*.php) through the $block reference. They MUST stay public.
+     */
+
     /** @var a cache for course modinfo */
-    protected $modinfo;
+    public $modinfo;
 
     /** @var a cache for coursemodinfo */
-    protected $coursemodinfo;
+    public $coursemodinfo;
 
     /** @var a local cache for completion info */
-    protected $completioninfo;
+    public $completioninfo;
+
+    /** @var object $cm the course module */
+    public $cm;
+
+    /** @var object $module the activity module record */
+    public $module;
+
+    /** @var object $moduleinstance the activity instance */
+    public $moduleinstance;
+
+    /** @var object $course the course */
+    public $course;
+
+    /** @var object $coursepage */
+    public $coursepage;
+
+    /** @var mixed $baseurl */
+    public $baseurl;
 
     /**
      * Sets default title and version.
@@ -96,10 +119,15 @@ class block_page_module extends block_base {
             $result = block_page_module_init($this->config->cmid);
 
             if ($result !== false && is_array($result)) {
-
                 // Get all of the variables out.
-                list($this->cm,     $this->module, $this->moduleinstance,
-                     $this->course, $this->coursepage,   $this->baseurl) = $result;
+                [
+                    $this->cm,
+                    $this->module,
+                    $this->moduleinstance,
+                    $this->course,
+                    $this->coursepage,
+                    $this->baseurl,
+                ] = $result;
 
                 if (!empty($this->config->showactivityname)) {
                     $this->title = format_string($this->moduleinstance->name);
@@ -127,7 +155,6 @@ class block_page_module extends block_base {
      * Serialize and store config data
      */
     public function instance_config_save($data, $nolongerused = false) {
-
         if (!isset($data->showactivityname)) {
             $data->showactivityname = 0;
         }
@@ -149,8 +176,14 @@ class block_page_module extends block_base {
 
         if ($result !== false && is_array($result)) {
             // Get all of the variables out.
-            list($this->cm,     $this->module, $this->moduleinstance,
-                 $this->course, $this->coursepage,   $this->baseurl) = $result;
+            [
+                $this->cm,
+                $this->module,
+                $this->moduleinstance,
+                $this->course,
+                $this->coursepage,
+                $this->baseurl,
+            ] = $result;
         }
 
         $debug = optional_param('debug', '', PARAM_INT);
@@ -198,6 +231,10 @@ class block_page_module extends block_base {
         if ($COURSE->format == 'page') {
             $pageid = str_replace('page-', '', $this->instance->subpagepattern);
             $page = course_page::get($pageid);
+            // A page of another course (cross course reference) or a missing page is ignored.
+            if (!empty($page) && ($page->courseid != $COURSE->id)) {
+                $page = null;
+            }
             // Let unpaged pass as "all pages blocks".
             if (empty($page)) {
                 $page = course_page::get_current_page($COURSE->id);
@@ -209,7 +246,10 @@ class block_page_module extends block_base {
         }
 
         // Add some additional controls.
-        if ($this->page->user_is_editing() && has_capability('moodle/course:manageactivities', $coursecontext)) {
+        if (
+            $this->page->user_is_editing() &&
+            has_capability('moodle/course:manageactivities', $coursecontext)
+        ) {
             $str = get_string('editmodule', 'block_page_module');
             $url = new moodle_url('/course/modedit.php', ['update' => $this->config->cmid]);
             $icon = new pix_icon('t/edit', $str, 'moodle', ['class' => 'iconsmall', 'title' => '']);
@@ -217,11 +257,13 @@ class block_page_module extends block_base {
             $bc->controls[] = new action_menu_link_secondary($url, $icon, $str, $attributes);
 
             $str = get_string('copymodule', 'block_page_module');
-            $params = ['id' => $COURSE->id,
-                            'sesskey' => sesskey(),
-                            'duplicate' => $this->config->cmid,
-                            'section' => $page->get_section(), // Carefull to that.
-                            'insertinpage' => $page->id];
+            $params = [
+                'id' => $COURSE->id,
+                'sesskey' => sesskey(),
+                'duplicate' => $this->config->cmid,
+                'section' => $page->get_section(), // Carefull to that.
+                'insertinpage' => $page->id,
+            ];
             $url = new moodle_url('/course/format/page/mod.php', $params);
             $icon = new pix_icon('t/copy', $str, 'moodle', ['class' => 'iconsmall', 'title' => '']);
             $attributes = ['class' => 'editing_edit'];
@@ -248,7 +290,7 @@ class block_page_module extends block_base {
      * @return object
      */
     public function get_content() {
-        global $USER, $COURSE, $CFG, $OUTPUT;
+        global $USER, $COURSE, $CFG, $OUTPUT, $DB;
 
         if ($this->content !== null) {
             return $this->content;
@@ -263,7 +305,7 @@ class block_page_module extends block_base {
          * The block may be asked for its content in other contexts (site level pages, reports, or courses
          * using another format), where it must stay silent instead of making the whole page fail.
          */
-        if ($COURSE->format != 'page' || !course_page::get_current_page($COURSE->id)) {
+        if (($COURSE->format != 'page') || !course_page::get_current_page($COURSE->id)) {
             return $this->content;
         }
 
@@ -278,21 +320,36 @@ class block_page_module extends block_base {
         $result = block_page_module_init($this->config->cmid);
 
         if ($result !== false && is_array($result)) {
-
             // Get all of the variables out.
-            list($this->cm,
-                 $this->module,
-                 $this->moduleinstance,
-                 $this->course,
-                 $this->coursepage,
-                 $this->baseurl) = $result;
+            [
+                $this->cm,
+                $this->module,
+                $this->moduleinstance,
+                $this->course,
+                $this->coursepage,
+                $this->baseurl,
+            ] = $result;
 
             $coursemodinfo = get_fast_modinfo($this->course);
             try {
                 $mod = $coursemodinfo->get_cm($this->config->cmid);
             } catch (Exception $ex) {
-                // Second try, after course modinfo rebuild.
-                rebuild_course_cache($COURSE->id);
+                /*
+                 * Second try, after course modinfo rebuild. The rebuild is only worth it if the cm really
+                 * belongs to this course (stale cache). A cm of another course or a deleted cm will never
+                 * be found, and rebuilding the cache at each view for each such block is a performance and
+                 * memory hog, for all users. Rebuild at most once per request.
+                 */
+                static $rebuilt = false;
+                static $cmcourses = [];
+                if (!array_key_exists($this->config->cmid, $cmcourses)) {
+                    $cmcourses[$this->config->cmid] = $DB->get_field('course_modules', 'course', ['id' => $this->config->cmid]);
+                }
+                if (!$rebuilt && $cmcourses[$this->config->cmid] == $COURSE->id) {
+                    rebuild_course_cache($COURSE->id);
+                    $rebuilt = true;
+                    $coursemodinfo = get_fast_modinfo($this->course);
+                }
                 try {
                     $mod = $coursemodinfo->get_cm($this->config->cmid);
                 } catch (Exception $ex) {
@@ -365,7 +422,10 @@ class block_page_module extends block_base {
                 }
 
                 // No hook could make the content, probably not pageable module, so use the standard cm rendering.
-                if (empty($this->content->text) && array_key_exists($this->config->cmid, $this->coursemodinfo->cms)) {
+                if (
+                    empty($this->content->text) &&
+                    array_key_exists($this->config->cmid, $this->coursemodinfo->cms)
+                ) {
                     if ($debug && ($CFG->debug == DEBUG_DEVELOPER)) {
                         echo "Debug: Printing cm in standard way as last chance for {$this->title} ";
                     }
@@ -417,18 +477,19 @@ class block_page_module extends block_base {
         $result = block_page_module_init($this->config->cmid);
 
         if ($result !== false && is_array($result)) {
-
             // Get all of the variables out.
-            list($this->cm,
-                 $this->module,
-                 $this->moduleinstance,
-                 $this->course,
-                 $this->coursepage,
-                 $this->baseurl) = $result;
+            [
+                $this->cm,
+                $this->module,
+                $this->moduleinstance,
+                $this->course,
+                $this->coursepage,
+                $this->baseurl,
+            ] = $result;
         }
 
         $extraclasses = '';
-        if ($COURSE->format == 'page' && $this->page->user_is_editing()) {
+        if (($COURSE->format == 'page') && $this->page->user_is_editing()) {
             $pageid = str_replace('page-', '', $this->instance->subpagepattern);
             if (!$pageid) {
                 // This is a "all pages block".
@@ -486,7 +547,7 @@ class block_page_module extends block_base {
         global $DB;
 
         if (is_null($cm)) {
-            $cm = new StdClass;
+            $cm = new StdClass();
             $cm->id = $this->config->cmid;
         }
 

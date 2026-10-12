@@ -95,7 +95,7 @@ function block_page_module_init($cmid) {
                     }
                     $instances = [];
                     foreach ($mods as $modname => $instanceids) {
-                        if ($records = $DB->get_records_list($modname, 'id', implode(',', $instanceids))) {
+                        if ($records = $DB->get_records_list($modname, 'id', $instanceids)) {
                             $instances[$modname] = $records;
                         }
                     }
@@ -245,9 +245,22 @@ function block_page_module_hook($moduleview, $method, $args = []) {
 
     foreach ($paths as $path => $function) {
         if (file_exists($path)) {
-            require_once($path);
-            if (is_callable($function)) {
-                $result = call_user_func_array($function, $args);
+            /*
+             * A faulty hook (missing class, partial deployment, broken module...) must not take down
+             * the whole course page. The block falls back to the standard module rendering.
+             */
+            try {
+                require_once($path);
+                if (is_callable($function)) {
+                    $result = call_user_func_array($function, $args);
+                    break;
+                }
+            } catch (\Throwable $t) {
+                $msg = "Page item hook $function failed in $path : ".$t->getMessage().' at '.$t->getFile().':'.$t->getLine();
+                debugging($msg, DEBUG_DEVELOPER);
+                error_log($msg);
+                block_page_module_debug_trace($msg, BLOCK_PAGE_MODULE_TRACE_ERRORS);
+                $result = false;
                 break;
             }
         }
