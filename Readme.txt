@@ -20,3 +20,11 @@ A faulty page item hook (mod/<name>/pageitem.php or format_page plugin) can no m
 Increment 4.5.0008 (2025120100)
 ===================================
 Fix "Cannot access protected property block_page_module::$cm" : the context attributes (cm, module, moduleinstance, course, coursepage, baseurl, modinfo, coursemodinfo, completioninfo) were made protected by the php8.3 compatibility fix of 4.5.0005, but they are read by the pageitem hooks of the activity modules (customlabel, learningtimecheck, etc.) through the block reference. They are public again.
+
+Increment 4.5.0009 (2025120100)
+===================================
+A page module is only rendered on effective page format course pages (pagetype course-view-page with a format_page layout), never on annex pages (user/index.php, module pages, reports...) even if loaded there by a standard block manager. Saving the block configuration through the core edit form no more detaches the block from its page (subpagepattern restored, see format_page\block_scope). Requires format_page 4.5.0030.
+
+Increment 4.5.0010 (2025120100)
+===================================
+Unpublished pages and low power roles : the current page may be missing (no visible page for the user), the protected page test no more fails on a null page. Calls the format_page memory guard so a runaway request ends with a readable call chain.

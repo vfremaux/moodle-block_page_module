@@ -30,10 +30,12 @@
 defined('MOODLE_INTERNAL') || die();
 
 use format_page\course_page;
+use format_page\block_scope;
 
 require_once($CFG->dirroot.'/blocks/page_module/lib.php');
 require_once($CFG->dirroot.'/lib/completionlib.php');
 require_once($CFG->dirroot.'/course/format/page/classes/page.class.php');
+require_once($CFG->dirroot.'/course/format/page/classes/block_scope.php');
 
 /**
  * Block class definition
@@ -159,7 +161,15 @@ class block_page_module extends block_base {
             $data->showactivityname = 0;
         }
         $config = clone($data);
+        $previouspattern = $this->instance->subpagepattern ?? null;
         parent::instance_config_save($config, $nolongerused);
+
+        // A core save (block edit form) may have wiped the page scope of this instance
+        // (subpagepattern NULL, pagetypepattern '*'...). Restore it. This runs whatever block
+        // manager is active (eg. dynamic form submission through the standard block_manager).
+        if (!empty($this->instance->id)) {
+            block_scope::enforce_page_scope($this->instance->id, $previouspattern);
+        }
     }
 
     /**
@@ -170,7 +180,18 @@ class block_page_module extends block_base {
     public function get_content_for_output($output) {
         global $COURSE, $SESSION;
 
+        // General rule : a page module only lives on effective page format course pages.
+        // Never render it on annex pages (user/index.php, module pages, reports...) even if the
+        // block instance was (mis)loaded there by a standard block manager.
+        if (!block_scope::is_effective_course_page($this->page)) {
+            return null;
+        }
+
         $coursecontext = context_course::instance($COURSE->id);
+
+        if (class_exists('format_page', false)) {
+            \format_page::memory_guard('block_page_module::get_content_for_output cmid '.($this->config->cmid ?? 0));
+        }
 
         $result = block_page_module_init($this->config->cmid);
 
@@ -240,7 +261,7 @@ class block_page_module extends block_base {
                 $page = course_page::get_current_page($COURSE->id);
             }
             $context = context::instance_by_id($this->instance->parentcontextid);
-            if ($page->protected && !has_capability('format/page:editprotectedpages', $context)) {
+            if (!empty($page) && $page->protected && !has_capability('format/page:editprotectedpages', $context)) {
                 return $bc;
             }
         }

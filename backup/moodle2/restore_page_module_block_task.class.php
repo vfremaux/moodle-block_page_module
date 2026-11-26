@@ -92,26 +92,42 @@ class restore_page_module_block_task extends restore_block_task {
             return;
         }
 
-        // Get the old block reference.
-        $sql = "
-            SELECT
-                fpi.*
-            FROM
-                {format_page_items} fpi,
-                {format_page} f
-            WHERE
-                f.courseid = ? AND
-                fpi.pageid = f.id AND
-                fpi.blockinstance = ?
-        ";
+        // Get the page item restored for the old block reference (mapping provided by the format_page restore).
+        $pageitem = false;
+        if ($itemid = $this->get_mappingid('format_page_item_block', $oldblockid)) {
+            $pageitem = $DB->get_record('format_page_items', ['id' => $itemid]);
+        }
 
-        if ($pageitem = $DB->get_record_sql($sql, [$courseid, $oldblockid])) {
+        if (!$pageitem) {
+            // Fallback : search in the restored pages only, in items not yet remapped.
+            $sql = "
+                SELECT
+                    fpi.*
+                FROM
+                    {format_page_items} fpi
+                JOIN
+                    {format_page} f
+                ON
+                    fpi.pageid = f.id
+                JOIN
+                    {backup_ids_temp} bi
+                ON
+                    bi.newitemid = f.id AND
+                    bi.backupid = ? AND
+                    bi.itemname = 'format_page'
+                WHERE
+                    f.courseid = ? AND
+                    fpi.blockinstance = ? AND
+                    fpi.cmid != 0
+            ";
+            $params = [$this->get_restoreid(), $courseid, $oldblockid];
+            $pageitem = $DB->get_record_sql($sql, $params, IGNORE_MULTIPLE);
+        }
+
+        if ($pageitem) {
             $pageitem->blockinstance = $blockid;
-            if ($pageitem->cmid ?? 0) {
-                $pageitem->cmid = $this->get_mappingid('course_module', $pageitem->cmid);
-            } else {
-                $pageitem->cmid = null; // marks a failed remapping.
-            }
+            // Cmid is NOT NULL in DB : 0 marks a failed remapping (course module not restored).
+            $pageitem->cmid = empty($pageitem->cmid) ? 0 : $this->get_mappingid('course_module', $pageitem->cmid, 0);
             $DB->update_record('format_page_items', $pageitem);
 
             $bi = $DB->get_record('block_instances', ['id' => $blockid]);
@@ -120,27 +136,27 @@ class restore_page_module_block_task extends restore_block_task {
             // Get the configdata.
 
             // Extract configdata.
-            $config = unserialize(base64_decode($bi->configdata));
-            // Set array of used rss feeds.
-            // TODO check this, not sure course modules are stored in backup mapping tables as this.
-            $config->cmid = $this->get_mappingid('course_module', $config->cmid);
-            // Serialize back the configdata.
-            $bi->configdata = base64_encode(serialize($config));
+            $config = unserialize(base64_decode($bi->configdata ?? ''));
+            if (is_object($config) && !empty($config->cmid)) {
+                $config->cmid = $this->get_mappingid('course_module', $config->cmid);
+                // Serialize back the configdata.
+                $bi->configdata = base64_encode(serialize($config));
+            }
 
             // Remap the subpage.
-            if (strpos($bi->subpagepattern, 'page-') === 0) {
-                $oldpageid = str_replace('page-', '', $bi->subpagepattern);
-                $newpageid = $this->get_mappingid('format_page', $oldpageid);
+            $subpagepattern = $bi->subpagepattern ?? '';
+            if (strpos($subpagepattern, 'page-') === 0) {
+                $oldpageid = str_replace('page-', '', $subpagepattern);
+                $newpageid = $this->get_mappingid('format_page', $oldpageid, $pageitem->pageid);
                 $bi->subpagepattern = 'page-'.$newpageid;
                 $DB->update_record('block_instances', $bi);
-            } else if (strpos($bi->subpagepattern, 'allpages-') === 0) {
-                $oldpageid = str_replace('allpages-', '', $bi->subpagepattern);
-                $newpageid = $this->get_mappingid('format_page', $oldpageid);
+            } else if (strpos($subpagepattern, 'allpages-') === 0) {
+                $oldpageid = str_replace('allpages-', '', $subpagepattern);
+                $newpageid = $this->get_mappingid('format_page', $oldpageid, $pageitem->pageid);
                 $bi->subpagepattern = 'allpages-'.$newpageid;
                 $DB->update_record('block_instances', $bi);
             } else {
                 // Old all pages case. Do not let NULL subpagepatterns in the DB.
-                $newpageid = $this->get_mappingid('format_page', $oldpageid);
                 $bi->subpagepattern = 'allpages-'.$pageitem->pageid;
                 $DB->update_record('block_instances', $bi);
             }
